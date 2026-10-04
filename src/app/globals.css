@@ -1402,12 +1402,6 @@ em {
   color: var(--ink);
   cursor: pointer;
 }
-.inspector-note {
-  max-width: 880px;
-  line-height: 1.6;
-  color: var(--muted);
-  margin: 16px 0;
-}
 .inspector-error {
   padding: 12px;
   border-left: 3px solid var(--orange);

@@ -86,7 +86,6 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
   await expect(order.locator(".response-code")).toHaveText(
     "HTTP — · unavailable",
   );
-  await expect(panel).toContainText("does not verify OpenAI receipt");
   await order.getByText("Payload and event options", { exact: true }).click();
   await expect(order.locator("pre")).toContainText('"event_id"');
   await expect(order.locator("pre")).not.toContainText('"group_id"');

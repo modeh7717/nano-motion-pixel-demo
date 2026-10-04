@@ -79,13 +79,6 @@ export function MeasurementInspector() {
               Clear local log
             </button>
           </div>
-          <p className="inspector-note">
-            Local observations only. SDK handoff does not verify OpenAI receipt,
-            attribution, or reporting. This in-memory log never replays events
-            and resets on refresh, revocation, or preference reset. HTTP — means
-            no response code is available. The SDK does not expose per-event
-            responses; inspect batch requests in DevTools Network.
-          </p>
           {state.error && (
             <p className="inspector-error" role="status">
               {state.error}
