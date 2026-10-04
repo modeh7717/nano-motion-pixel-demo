@@ -39,9 +39,6 @@ export default function RootLayout({
             loading is controlled by accepted consent in the measurement store. */}
         <MeasurementProvider
           pixelId={
-            // This is a public identifier, not an API credential. An unset value
-            // uses the supplied demo ID. An explicitly empty string is preserved
-            // by ?? and causes the store to disable SDK initialization.
             process.env.NEXT_PUBLIC_OPENAI_PIXEL_ID ?? "T8bLgKF4RsYWhHwHnPDJWg"
           }
         >
