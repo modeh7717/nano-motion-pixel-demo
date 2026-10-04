@@ -50,7 +50,7 @@ npm run build
 npm run test:e2e
 ```
 
-`typecheck` generates Next.js route types before running TypeScript, so it works before the first build. Browser tests start and stop their own **production** server on port 3100 and require a successful build. They cover both desktop and mobile Chromium. The cloud machine's `/usr/bin/chromium` is used automatically. Elsewhere, install a browser with `npx playwright install chromium` or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible executable. Linux may additionally need Playwright's documented browser system dependencies.
+`typecheck` generates Next.js route types before running TypeScript, so it works before the first build. Browser tests start and stop their own **production** server on port 3100 and require a successful build. They run 13 desktop scenarios and 2 focused mobile Chromium smoke tests; fast unit tests cover business edge cases. The cloud machine's `/usr/bin/chromium` is used automatically. Elsewhere, install a browser with `npx playwright install chromium` or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible executable. Linux may additionally need Playwright's documented browser system dependencies.
 
 ESLint is pinned to version 9 because the React rules bundled with the current `eslint-config-next` fail on ESLint 10. The lockfile pins the complete dependency tree.
 

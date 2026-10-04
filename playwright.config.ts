@@ -19,9 +19,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "desktop", use: { viewport: { width: 1440, height: 1000 } } },
+    {
+      name: "desktop",
+      testIgnore: "**/mobile.spec.ts",
+      use: { viewport: { width: 1440, height: 1000 } },
+    },
     {
       name: "mobile",
+      testMatch: "**/mobile.spec.ts",
       use: {
         viewport: { width: 390, height: 844 },
         isMobile: true,

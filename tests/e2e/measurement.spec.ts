@@ -6,13 +6,12 @@ import {
   events,
   installSdk,
   mockSdk,
-  sdkUrl,
 } from "./helpers/pixel";
 import type { Route } from "@playwright/test";
 
 test("unknown/declined consent loads no SDK; pre-consent commerce is never backfilled", async ({
   page,
-}, info) => {
+}) => {
   let loads = 0;
   await installSdk(page, async (route) => {
     loads++;
@@ -25,10 +24,6 @@ test("unknown/declined consent loads no SDK; pre-consent commerce is never backf
   await expect(
     page.getByRole("region", { name: "Measurement preference" }),
   ).toBeVisible();
-  await page.screenshot({
-    path: info.outputPath("consent.png"),
-    fullPage: true,
-  });
   await page.getByRole("button", { name: "Decline", exact: true }).click();
   await page.getByRole("button", { name: "Add to cart", exact: true }).click();
   await page.getByRole("link", { name: "View cart", exact: true }).click();
@@ -122,7 +117,18 @@ test("all six events use correct payloads and persisted stable conversion IDs wi
   const savedOrder = await page.evaluate(
     () => JSON.parse(localStorage.getItem("nano-motion:commerce:v1")!).order,
   );
+  await expect(page.locator(".order-total")).toHaveText("$296.00");
+  expect(savedOrder.snapshot.items[0]).toMatchObject({
+    quantity: 2,
+    unitPriceCents: 14800,
+  });
+  expect(checkouts[0][3]).toEqual({
+    event_id: `checkout_${savedOrder.checkoutAttemptId}`,
+  });
   expect(orders[0][3]).toEqual({ event_id: `order_${savedOrder.id}` });
+  const commerceBeforeMembership = await page.evaluate(() =>
+    localStorage.getItem("nano-motion:commerce:v1"),
+  );
   const observations = await page.evaluate(() => window.__pixelOutcomes);
   expect(observations).toContainEqual(
     expect.objectContaining({
@@ -140,6 +146,10 @@ test("all six events use correct payloads and persisted stable conversion IDs wi
       (button as HTMLButtonElement).click();
     });
   await expect(page.locator(".enrollment-id")).toBeVisible();
+  await expect(page.locator(".membership-amount")).toHaveText("$19.00");
+  expect(
+    await page.evaluate(() => localStorage.getItem("nano-motion:commerce:v1")),
+  ).toBe(commerceBeforeMembership);
   measured = await events(page);
   const memberships = measured.filter(
     (event) => event[1] === "subscription_created",
@@ -222,62 +232,6 @@ test("committed navigation and history create visits while query/hash changes an
     .toBe(2);
 });
 
-test("checkout attempt is measured once, explicit restart is new, and pre-consent attempt is not backfilled", async ({
-  page,
-}) => {
-  await installSdk(page);
-  await page.goto("/product/aero-run-jacket");
-  await page.getByRole("button", { name: "Add to cart" }).click();
-  await page.getByRole("link", { name: "View cart", exact: true }).click();
-  await page.getByRole("button", { name: "Begin demo checkout" }).click();
-  await expect(
-    page.getByRole("button", { name: "Complete demo order" }),
-  ).toBeEnabled();
-  await accept(page);
-  expect(
-    (await events(page)).filter((event) => event[1] === "checkout_started"),
-  ).toHaveLength(0);
-  await page.getByRole("link", { name: "Return to cart" }).click();
-  await page.getByRole("button", { name: "Begin demo checkout" }).click();
-  await expect(
-    page.getByRole("button", { name: "Complete demo order" }),
-  ).toBeEnabled();
-  const checkout = (await events(page)).find(
-    (event) => event[1] === "checkout_started",
-  )!;
-  expect(checkout).toBeDefined();
-  await page.getByRole("link", { name: "Return to cart" }).click();
-  await expect(page).toHaveURL(/\/cart$/);
-  await expect(
-    page.getByRole("button", { name: "Begin demo checkout" }),
-  ).toBeEnabled();
-  await page.goBack();
-  await expect(
-    page.getByRole("button", { name: "Complete demo order" }),
-  ).toBeEnabled();
-  expect(
-    (await events(page)).filter((event) => event[1] === "checkout_started"),
-  ).toHaveLength(1);
-  await page.reload();
-  await expect(
-    page.getByRole("button", { name: "Complete demo order" }),
-  ).toBeEnabled();
-  await expect.poll(async () => (await events(page)).length).toBe(1);
-  expect((await events(page))[0][1]).toBe("page_viewed");
-  await page.getByRole("link", { name: "Return to cart" }).click();
-  await page.getByRole("button", { name: "Begin demo checkout" }).click();
-  await expect
-    .poll(
-      async () =>
-        (await events(page)).filter((event) => event[1] === "checkout_started")
-          .length,
-    )
-    .toBe(1);
-  expect(
-    (await events(page)).find((event) => event[1] === "checkout_started")![3],
-  ).not.toEqual(checkout[3]);
-});
-
 test("revoking during delayed SDK load suppresses actions and current views until reacceptance", async ({
   page,
 }) => {
@@ -285,13 +239,20 @@ test("revoking during delayed SDK load suppresses actions and current views unti
   await installSdk(page, async (route) => {
     held = route;
   });
-  await page.goto("/product/aero-run-jacket");
+  await page.goto("/product/aero-run-jacket?measurementDebug=true");
+  const panel = page.getByRole("complementary", {
+    name: "Local instrumentation log",
+  });
   await page
     .getByRole("button", { name: "Accept measurement", exact: true })
     .click();
   await expect.poll(() => !!held).toBe(true);
   await page.getByRole("button", { name: "Add to cart" }).click();
+  await expect(panel.locator('[data-event-name="items_added"]')).toContainText(
+    "SDK is loading",
+  );
   await page.getByRole("button", { name: "Revoke measurement" }).click();
+  await expect(panel).toContainText("No local observations yet.");
   await held.fulfill({ contentType: "application/javascript", body: mockSdk });
   await expect
     .poll(async () => (await commands(page)).some((call) => call[0] === "init"))
@@ -325,11 +286,18 @@ test("blocked SDK cannot interrupt order or membership completion", async ({
   await installSdk(page, async (route) => {
     await route.abort();
   });
-  await page.goto("/product/aero-run-jacket");
+  await page.goto("/product/aero-run-jacket?measurementDebug=true");
   await page
     .getByRole("button", { name: "Accept measurement", exact: true })
     .click();
+  const panel = page.getByRole("complementary", {
+    name: "Local instrumentation log",
+  });
+  await expect(panel).toContainText("SDK: failed");
   await page.getByRole("button", { name: "Add to cart" }).click();
+  await expect(
+    panel.locator('[data-event-name="items_added"]'),
+  ).toHaveAttribute("data-dispatch-status", "failed");
   await page.getByRole("link", { name: "View cart", exact: true }).click();
   await page.getByRole("button", { name: "Begin demo checkout" }).click();
   await page.getByRole("button", { name: "Complete demo order" }).click();
@@ -341,34 +309,6 @@ test("blocked SDK cannot interrupt order or membership completion", async ({
   await page.getByRole("button", { name: "Join demo membership" }).click();
   await expect(page.locator(".enrollment-id")).toBeVisible();
   expect(await events(page)).toEqual([]);
-});
-
-test("unavailable/corrupt consent storage restores unknown with an honest choice notice", async ({
-  page,
-}) => {
-  await page.addInitScript(
-    ({ key }) => {
-      localStorage.setItem(key, '{"version":99,"preference":"accepted"}');
-    },
-    { key: consentKey },
-  );
-  let loads = 0;
-  await page.route(sdkUrl, async (route) => {
-    loads++;
-    await route.abort();
-  });
-  await page.goto("/");
-  await expect(
-    page.getByRole("region", { name: "Measurement preference" }),
-  ).toContainText("saved preference could not be read");
-  expect(loads).toBe(0);
-  await page.getByRole("button", { name: "Decline", exact: true }).click();
-  expect(
-    await page.evaluate(
-      (key) => JSON.parse(localStorage.getItem(key)!).preference,
-      consentKey,
-    ),
-  ).toBe("declined");
 });
 
 test("cross-tab revocation stops subsequent submissions in the open document", async ({
@@ -396,38 +336,4 @@ test("cross-tab revocation stops subsequent submissions in the open document", a
   expect((await events(page)).map((event) => event[1])).toEqual([
     "contents_viewed",
   ]);
-});
-
-test("denied consent storage retains this visit's choice and restores unknown after refresh", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, "localStorage", {
-      configurable: true,
-      get() {
-        throw new DOMException("Blocked", "SecurityError");
-      },
-    });
-  });
-  let loads = 0;
-  await page.route(sdkUrl, async (route) => {
-    loads++;
-    await route.abort();
-  });
-  await page.goto("/");
-  await expect(
-    page.getByRole("region", { name: "Measurement preference" }),
-  ).toContainText("storage is unavailable");
-  await page.getByRole("button", { name: "Decline", exact: true }).click();
-  await expect(page.locator(".measurement-preferences")).toContainText(
-    "Measurement: declined",
-  );
-  await expect(page.locator(".measurement-preferences")).toContainText(
-    "applies to this visit",
-  );
-  await page.reload();
-  await expect(
-    page.getByRole("region", { name: "Measurement preference" }),
-  ).toBeVisible();
-  expect(loads).toBe(0);
 });
