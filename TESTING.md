@@ -72,6 +72,12 @@ Phase 4 passed the production build, ESLint, TypeScript, 35 domain tests, and 60
 
 Phase 5 passed the production build, ESLint, TypeScript, 41 unit tests, and 70 desktop/mobile browser checks. Inspector screenshots for successful handoff and SDK failure were visually reviewed. A development-mode check verified automatic inspector visibility without a query flag, visibility after client navigation, one initialization/view under Strict Mode, and log clearing without SDK side effects. The diagnostic-clear guard was tested to ensure revocation closes consent before notifying subscribers. Live SDK transport/receipt limitations remain unchanged.
 
+## SDK compatibility follow-up
+
+The official SDK downloaded over certificate-verified HTTPS on October 4, 2026 reported version `0.1.41`. Its loaded function retains an empty `.q` compatibility array, so treating any `.q` as an unloaded stub was incorrect. The driver now checks that the SDK replaced the installation function and records successful readiness separately. The controlled SDK fixture retains `.q` as a regression case. Build, lint, TypeScript, all 41 unit tests, and all 70 browser checks passed after the fix.
+
+A browser smoke check ran the actual downloaded SDK, with its script and transport responses intercepted locally. The adapter reached ready state and the SDK generated a `page_viewed` POST to `/v1/sdk/events`. The SDK also sent a separate startup POST before that batched event; the check waited for the page-view payload specifically. Intercepted HTTP 204 responses were test responses, not live OpenAI receipt. TLS verification was not disabled.
+
 ## Measurement and live SDK checks
 
 Official Pixel, Supported Events, Conversions API, and Conversion Tracking documentation was read on **October 3, 2026 (America/Los_Angeles)** and rechecked on **October 4, 2026 (UTC)**. The event names and schemas agree with the design; see README for the loading decision and the discrepancy in the design's opening implementation claim.
@@ -80,7 +86,7 @@ The quantity-two domain/browser tests verify unit price `14800`, quantity `2`, a
 
 Membership tests verify a stable enrollment ID and the initial `1900` USD cents with the `nano-motion-plus-monthly` plan. `subscription_created` uses `type: "plan_enrollment"`, that saved snapshot, and `subscription_<enrollment ID>` as its fourth-argument event ID.
 
-Live SDK transport, actual SDK batching/revocation behavior, conversion receipt, and deployment remain **unverified**. The SDK URL returned HTTP 403 in this environment. The mock does not reproduce or prove undocumented vendor internals. Complete these checks from a browser/network that can load the official SDK:
+Direct live SDK transport, actual SDK batching/revocation behavior, conversion receipt, and deployment remain **unverified**. The initial downloader received HTTP 403 with Cloudflare error 1010; repeating with a browser-style user agent received HTTP 200. Direct cloud Chromium loading fails with `ERR_CERT_AUTHORITY_INVALID`, a separate certificate-trust problem. The mock does not reproduce or prove undocumented vendor internals. Complete these checks from a browser/network that can load the official SDK:
 
 1. Start development mode (`debug: true`) and open DevTools Console and Network with preserve log. Clear prior demo state in a fresh profile.
 2. Browse and complete shopping with unknown/declined consent. Verify no SDK request or measurement transport.

@@ -8,7 +8,7 @@ Use a fresh browser profile so the cart, consent, order, and membership start em
 
 Open DevTools Console and Network, enable preserve log, and filter Network by `bzrcdn.openai.com` and `bzr.openai.com`. In production, set the debug flag before accepting/restoring consent if you want SDK console debugging: the debug option is read at the document's one initialization and is not changed by later panel toggles. Refresh with the flag to start a new SDK initialization.
 
-Confirm the official SDK can load before presenting live transport. It returned HTTP 403 from the cloud machine used for implementation, and an unmocked browser attempt obtained no response. If your browser also cannot load it, show the local failure and working commerce, then describe the controlled integration tests accurately. Never present mocked SDK calls as live OpenAI receipt.
+Confirm the official SDK can load before presenting live transport. The initial automated download was rejected with HTTP 403 (Cloudflare error 1010), while a browser-style user agent received HTTP 200. Direct cloud Chromium loading separately fails certificate verification (`ERR_CERT_AUTHORITY_INVALID`). The downloaded official SDK was verified to generate a page-view request with locally intercepted responses; that is not live receipt evidence. If your browser cannot load it, show the local failure and working commerce, then describe the integration tests accurately. Never present intercepted responses or mocked SDK calls as live OpenAI receipt.
 
 ## Suggested 20-minute walkthrough
 

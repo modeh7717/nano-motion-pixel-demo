@@ -26,6 +26,8 @@ export const mockSdk = `(() => {
       window.__pixelOutcomes.push({ commerce, membership });
     }
   };
+  // The real SDK retains this compatibility array after replacing the stub.
+  window.oaiq.q = [];
   queued.forEach(args => window.oaiq(...args));
 })();`;
 export async function installSdk(

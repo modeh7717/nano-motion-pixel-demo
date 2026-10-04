@@ -12,6 +12,7 @@ declare global {
 // queued while loading, so revocation cannot replay application-held actions.
 export function createBrowserPixelDriver(timeoutMs = 12_000): PixelDriver {
   let pending: Promise<void> | undefined;
+  let ready = false;
   return {
     load(config) {
       if (pending) return pending;
@@ -43,9 +44,14 @@ export function createBrowserPixelDriver(timeoutMs = 12_000): PixelDriver {
           timeoutMs,
         );
         script.onload = () => {
-          if (!window.oaiq || window.oaiq.q)
+          // The loaded official SDK retains an empty .q compatibility array.
+          // Readiness means it replaced the installation stub, not removed .q.
+          if (typeof window.oaiq !== "function" || window.oaiq === queue)
             finish(new Error("Measurement SDK did not become ready."));
-          else finish();
+          else {
+            ready = true;
+            finish();
+          }
         };
         script.onerror = () =>
           finish(new Error("Measurement script could not load."));
@@ -57,7 +63,7 @@ export function createBrowserPixelDriver(timeoutMs = 12_000): PixelDriver {
       window.oaiq?.("consent", accepted);
     },
     measure(event) {
-      if (!window.oaiq || window.oaiq.q)
+      if (!ready || typeof window.oaiq !== "function")
         throw new Error("Measurement SDK is unavailable.");
       window.oaiq(
         "measure",
