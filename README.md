@@ -8,7 +8,7 @@ A fictional activewear storefront for the OpenAI Measurement Pixel demo. This re
 - A home page, catalog, and three statically generated product detail pages.
 - All planned commerce and membership routes, with honest empty states and a disabled enrollment control.
 - Shared navigation, route metadata, branded 404s, keyboard focus styles, and a skip link.
-- Original SVG illustrations served locally, with no external image or font dependency.
+- Local illustrations: SVG product artwork and a PNG runner illustration, with no external image or font dependency.
 - Stable product IDs and prices stored as integer USD cents: `14800`, `11800`, and `6800`.
 
 Cart actions, persistence, simulated orders, membership enrollment, consent, Pixel integration, and the event inspector belong to later phases. Confirmation routes do not fabricate a successful outcome. No measurement SDK is loaded, and no measurement requests are sent in Phase 1.
@@ -61,7 +61,7 @@ See [TESTING.md](./TESTING.md) for the checks and remaining validation scope.
 | `/membership`              | Fictional $19/month plan; enrollment disabled                        |
 | `/membership-confirmation` | No-enrollment state                                                  |
 
-`src/app` contains routes and global styles, `src/components` holds reusable UI, `src/data/products.ts` defines the typed catalog, and `src/lib/money.ts` handles USD presentation. All original artwork is in `public/images`. Browser checks are in `tests/e2e`.
+`src/app` contains routes and global styles, `src/components` holds reusable UI, `src/data/products.ts` defines the typed catalog, and `src/lib/money.ts` handles USD presentation. All artwork is in `public/images`. Browser checks are in `tests/e2e`.
 
 ## Design and OpenAI documentation review
 

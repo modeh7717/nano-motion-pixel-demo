@@ -34,7 +34,7 @@ export default function HomePage() {
         </div>
         <div className="hero-art">
           <Image
-            src="/images/motion-landscape.svg"
+            src="/images/motion-landscape.png"
             alt="An illustrated runner moving through a sunlit landscape, framed by flowing track lines"
             fill
             priority
