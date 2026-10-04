@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Arrow } from "@/components/brand";
 import { ProductCard } from "@/components/product-card";
 import { products } from "@/data/products";
+import motionLandscape from "../../public/images/motion-landscape.png";
 
 export default function HomePage() {
   return (
@@ -34,7 +35,7 @@ export default function HomePage() {
         </div>
         <div className="hero-art">
           <Image
-            src="/images/motion-landscape.png"
+            src={motionLandscape}
             alt="An illustrated runner moving through a sunlit landscape, framed by flowing track lines"
             fill
             priority
