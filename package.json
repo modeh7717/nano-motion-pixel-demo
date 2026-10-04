@@ -2,8 +2,9 @@
   "name": "nano-motion-pixel-demo",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
@@ -11,7 +12,8 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --experimental-strip-types --test \"tests/unit/*.test.ts\""
   },
   "dependencies": {
     "next": "16.3.8",

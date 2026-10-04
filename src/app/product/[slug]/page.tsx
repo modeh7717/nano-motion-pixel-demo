@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Arrow } from "@/components/brand";
 import { ProductCard } from "@/components/product-card";
+import { AddToCart } from "@/components/add-to-cart";
 import { getProductBySlug, products } from "@/data/products";
 import { formatUsd } from "@/lib/money";
 
@@ -64,13 +65,7 @@ export default async function ProductPage({ params }: Props) {
               <li key={highlight}>{highlight}</li>
             ))}
           </ul>
-          <div className="coming-soon">
-            <p>Meet your next essential.</p>
-            <span>
-              This demo currently supports browsing. Shopping will be available
-              in a future phase.
-            </span>
-          </div>
+          <AddToCart productId={product.id} />
           <Link href="/shop" className="text-link">
             Explore the full collection
             <Arrow />

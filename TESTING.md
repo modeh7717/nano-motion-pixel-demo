@@ -1,4 +1,4 @@
-# Phase 1 validation
+# Phases 1 and 2 validation
 
 ## Reproduce
 
@@ -8,13 +8,14 @@ From the repository root, with Node.js 24 and npm:
 npm ci
 npm run lint
 npm run typecheck
+npm run test:unit
 npm run build
 npm run test:e2e
 ```
 
 Use `--cache /workspace/.npm-cache` with npm installation commands in the cloud machine. If Chromium is absent, run `npx playwright install chromium` first. The test config also accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` and automatically uses `/usr/bin/chromium` when present.
 
-The suite launches a production server on port 3100, runs eight scenarios at each of two viewport sizes (1440 × 1000 desktop and 390 × 844 mobile), then stops that server. It uses two workers and no automatic retries. A successful run executes **16 tests**; no tests are skipped.
+The browser suite launches a production server on port 3100, runs fourteen scenarios at each of two viewport sizes (1440 × 1000 desktop and 390 × 844 mobile), then stops that server. It uses two workers and no automatic retries. A successful run executes **28 browser tests**. The domain suite runs **15 Node tests**. No tests are skipped.
 
 ## Automated coverage
 
@@ -26,26 +27,36 @@ The suite launches a production server on port 3100, runs eight scenarios at eac
 - Every planned route loading its artwork and fitting the desktop/mobile viewport without horizontal overflow.
 - No uncaught browser exceptions, external resource requests, Pixel global, or localStorage writes while browsing.
 - Keyboard access to the skip link and main content.
+- Add-to-cart, quantity edits, removal, persistence, invalid-quantity rejection, and exact multi-product totals.
+- The quantity-two contract: two jackets retain unit price `14800`, quantity `2`, and total `29600` cents.
+- Direct checkout, refresh/history reuse, explicit attempt restarts, and invalidation after cart edits.
+- Rapid double submission, order persistence, cart clearing, immutable snapshots, and new independent orders.
+- Corrupt, denied, and quota-limited browser storage; outcomes survive client navigation in memory and are not invented on refresh.
+- Safe-integer arithmetic, including unsafe individual products and overflow when summing otherwise valid lines.
 
-The home-page tests save full-page desktop and mobile screenshots in their per-test `test-results` directories. Failures additionally produce screenshots and traces. These generated files are ignored by Git.
+The tests save full-page home, cart, checkout, and order screenshots in their per-test `test-results` directories. Failures additionally produce screenshots and traces. These generated files are ignored by Git.
 
 ## Manual review
 
 1. Start `npm run dev`, open the application using your development environment's normal access method, and inspect the home, shop, and all three product pages.
 2. Review at desktop and mobile widths: readable text, usable navigation, artwork, product prices, and footer demo disclosure.
 3. Tab through navigation, product cards, and links. Confirm visible focus and that “Skip to content” moves focus into main content.
-4. Open cart, checkout, order confirmation, and membership confirmation directly. Each should show the appropriate empty state.
-5. Open membership. Confirm enrollment is disabled and the plan is clearly fictional.
-6. Visit an unknown product slug and an unknown route. Confirm the branded 404 and collection link.
+4. In a fresh browser profile, open cart, checkout, order confirmation, and membership confirmation directly. Each should show the appropriate empty state.
+5. Add two jackets and one tee. Verify $364.00, change jacket quantity to three ($512.00), refresh, and verify the restored quantities. Remove the tee ($444.00).
+6. Begin demo checkout, refresh, return to cart, and explicitly restart. Confirm totals and that no personal/payment form appears.
+7. Complete a demo order, click rapidly twice, then refresh confirmation. Confirm the same order ID, correct quantities/total, and an empty cart.
+8. Use browser storage restrictions to repeat the journey. Confirm the warning and that confirmation refresh shows no invented outcome when the order could not be saved.
+9. Open membership. Confirm enrollment is disabled and the plan is clearly fictional.
+10. Visit an unknown product slug and an unknown route. Confirm the branded 404 and collection link.
 
 ## Verified in this cloud instance
 
-The production build, ESLint, TypeScript, and all 16 Chromium scenarios passed. Desktop and mobile home-page screenshots were visually reviewed. Node.js was 24.19.0 and npm was 11.9.0. Development-server startup and representative route responses are also checked as part of environment setup.
+The production build, ESLint, TypeScript, 15 domain tests, and 28 Chromium tests passed for Phase 2. Desktop and mobile journey screenshots were visually reviewed. Node.js was 24.19.0 and npm was 11.9.0.
 
 ## Documentation review and future measurement checks
 
 Official Pixel, Supported Events, Conversions API, and Conversion Tracking documentation was read on **October 3, 2026 (America/Los_Angeles)**. The event names and schemas in the design agree with the current documentation; see README for the verification notes and the discrepancy in the design's opening implementation claim.
 
-For the future quantity-two test: unit price is `14800`, quantity is `2`, and the event-level checkout/order amount is `29600` with `currency: "USD"`. The intended browser contents item is `{ id: "NM-RUN-001", name: "Aero Run Jacket", content_type: "product", quantity: 2 }`. Omit optional item-level `amount` and `currency` while their unit-versus-total meaning is unspecified. An add-one action reports quantity `1` and event amount `14800`, even when it produces a cart quantity of two. This describes the reviewed future contract; it is not an implemented or tested measurement payload in Phase 1.
+The quantity-two domain/browser tests verify unit price `14800`, quantity `2`, and checkout/order total `29600` with currency `USD`. The intended future measurement contents item is `{ id: "NM-RUN-001", name: "Aero Run Jacket", content_type: "product", quantity: 2 }`. Omit optional item-level `amount` and `currency` while their unit-versus-total meaning is unspecified. An add-one action will report quantity `1` and event amount `14800`, even when it produces a cart quantity of two. These measurement payloads remain a Phase 4 contract; no SDK calls are made now.
 
-Cart persistence, monetary-input validation, checkout-attempt boundaries, double-submit guards, order/enrollment persistence, consent, event builders, Pixel loading/revocation, SDK transport, conversion receipt, and deployment are **not yet implemented or validated**. The complete design's unit, integration, and manual measurement checklist must be applied in those phases. This release's browser checks establish scaffold behavior only. No attribution, campaign reporting, or ROAS result is claimed.
+Membership enrollment/persistence, consent, event builders, Pixel loading/revocation, SDK transport, conversion receipt, and deployment are **not yet implemented or validated**. The complete design's unit, integration, and manual measurement checklist must be applied in those phases. Cross-tab and backend transaction guarantees are outside this browser demo; submission guards apply within the current document. No attribution, campaign reporting, or ROAS result is claimed.

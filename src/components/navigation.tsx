@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCommerce } from "@/components/commerce-provider";
 
 export function Navigation() {
   const pathname = usePathname();
+  const { state } = useCommerce();
+  const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
   const links = [
     {
       href: "/shop",
@@ -28,6 +31,11 @@ export function Navigation() {
       {links.map(({ href, label, active }) => (
         <Link key={href} href={href} aria-current={active ? "page" : undefined}>
           {label}
+          {href === "/cart" && count > 0 && (
+            <span className="cart-count" aria-label={`${count} items`}>
+              {count}
+            </span>
+          )}
           {href === "/cart" && (
             <svg
               width="17"
