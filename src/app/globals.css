@@ -907,6 +907,26 @@ em {
 }
 
 /* Demo commerce journeys */
+.membership-active {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.membership-plan a.button {
+  justify-content: space-between;
+}
+.membership-confirmation-summary .total-row {
+  font-size: 16px;
+}
+.membership-confirmation-summary .total-row dt {
+  max-width: 70%;
+}
+.membership-confirmation-summary .demo-benefits {
+  line-height: 2;
+}
+.membership-confirmation-summary .demo-benefits li {
+  margin-top: 10px;
+}
 .cart-count {
   display: inline-grid;
   place-items: center;

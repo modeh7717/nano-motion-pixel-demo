@@ -1,6 +1,6 @@
 # Nano Motion
 
-A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phase 1 — Scaffold** and **Phase 2 — Commerce** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
+A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phase 1 — Scaffold**, **Phase 2 — Commerce**, and **Phase 3 — Membership** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
 
 ## What works
 
@@ -9,12 +9,13 @@ A fictional activewear storefront for the OpenAI Measurement Pixel demo. This re
 - Product-to-cart actions, editable quantities, removal, and a persistent cart with a navigation count.
 - Simulated checkout with persistent attempts, guarded submission, and immutable order snapshots.
 - Order confirmation that restores the latest completed order without recreating it.
-- Safe empty states for direct entry and a membership scaffold with enrollment disabled until Phase 3.
+- A simulated $19/month membership with a saved enrollment, immutable plan snapshot, and guards that reuse the existing enrollment.
+- Safe empty states for direct entry and in-memory fallbacks when browser storage is unavailable.
 - Shared navigation, route metadata, branded 404s, keyboard focus styles, and a skip link.
 - Local illustrations: SVG product artwork and a PNG runner illustration, with no external image or font dependency.
 - Stable product IDs and prices stored as integer USD cents: `14800`, `11800`, and `6800`.
 
-Membership enrollment, consent, Pixel integration, and the event inspector belong to later phases. Confirmation routes do not fabricate a successful outcome. No measurement SDK is loaded, and no measurement requests are sent in this release. Demo checkout collects no personal or payment information and charges nothing.
+Consent, Pixel integration, and the event inspector belong to later phases. Confirmation routes do not fabricate a successful outcome. No measurement SDK is loaded, and no measurement requests are sent in this release. Demo checkout and membership collect no personal or payment information and charge nothing.
 
 ## Develop
 
@@ -62,8 +63,8 @@ See [TESTING.md](./TESTING.md) for the checks and remaining validation scope.
 | `/cart`                    | Editable, persistent cart and exact USD totals                       |
 | `/checkout`                | Simulated checkout; empty entry creates no attempt                   |
 | `/order-confirmation`      | Latest saved order, or a safe no-order state                         |
-| `/membership`              | Fictional $19/month plan; enrollment disabled                        |
-| `/membership-confirmation` | No-enrollment state                                                  |
+| `/membership`              | Fictional $19/month plan; join or view the active demo membership    |
+| `/membership-confirmation` | Saved enrollment, or a safe no-enrollment state                      |
 
 `src/app` contains routes and global styles, `src/components` holds reusable UI, `src/data/products.ts` defines the typed catalog, and `src/lib/money.ts` handles USD presentation. All artwork is in `public/images`. Browser checks are in `tests/e2e`.
 
@@ -76,6 +77,14 @@ The versioned `nano-motion:commerce:v1` record contains the cart, current checko
 Direct checkout with a valid cart creates an attempt. Refresh and back/forward reuse it; explicitly beginning checkout again from the cart creates a new one. Cart edits invalidate the active attempt. Completion validates the attempt, guards submission synchronously, saves an immutable order, closes the attempt, and clears the cart in one storage write. Reprocessing the same attempt reuses its order. A new independent order needs a new valid cart and attempt.
 
 Corrupt records restore safe empty states. Storage denial or quota failure leaves the journey functional in memory and displays a notice that refresh may lose the data. The saved state is a browser demo, with submission guards scoped to one document; it is not a backend order system or a cross-tab transaction service. Confirmation routes only read existing outcomes.
+
+## Demo membership
+
+The typed `nano-motion-plus-monthly` plan costs `1900` USD cents per month. Its benefits are fictional; joining does not change cart prices or shipping. The saved amount represents the simulated first monthly enrollment, without real billing or renewals.
+
+A separate context and `nano-motion:membership:v1` storage record hold the enrollment ID, creation time, active status, and immutable plan snapshot. Domain behavior lives in `src/lib/membership`; commerce and membership share primitive validators in `src/lib/validation.ts`. Enrollment never changes the cart or order record.
+
+Joining saves the outcome before navigating to confirmation. Repeated clicks, returning to the plan page, and refresh reuse the existing enrollment. Confirmation only reads saved state. Corrupt records restore a safe empty state; storage denial and quota failure retain the enrollment in memory and disclose that refresh may lose it. These guards apply within the current document, as with commerce.
 
 ## Design and OpenAI documentation review
 
@@ -96,6 +105,6 @@ The docs still describe item-level `amount` without distinguishing unit price fr
 
 To deploy this scaffold on Vercel, import this repository, choose the Next.js framework preset, use `npm ci` for installation and `npm run build` for the build, and use a Node.js version supported by the manifest. No custom output directory or secrets are required. Deployment has not been performed or validated.
 
-Phase 3 adds demo enrollment. Phase 4 adds consent and the centralized Pixel adapter; Phase 5 adds the local event inspector. Stable order IDs are retained now so later conversion event IDs can be derived from the persisted outcome. The full design's acceptance criteria apply to the complete project, not to these first two phases.
+Phase 4 adds consent and the centralized Pixel adapter; Phase 5 adds the local event inspector. Stable order and enrollment IDs are retained now so later conversion event IDs can be derived from the persisted outcomes. The full design's acceptance criteria apply to the complete project, including its later measurement phases.
 
 Future server-side measurement would send confirmed outcomes through the Conversions API and reuse the Pixel ID, event name, and stable event ID for deduplication. It requires a backend and a server-held Conversions API key; browser code must never contain that key. No server integration is required for this demo.

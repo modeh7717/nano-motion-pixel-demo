@@ -1,16 +1,8 @@
 import type { Metadata } from "next";
-import { EmptyState } from "@/components/empty-state";
+import { MembershipConfirmationView } from "@/components/membership-confirmation-view";
 
 export const metadata: Metadata = { title: "Membership confirmation" };
 
 export default function MembershipConfirmationPage() {
-  return (
-    <EmptyState
-      eyebrow="MEMBERSHIP CONFIRMATION"
-      title="Your next chapter awaits."
-      description="There’s no active demo membership to show. Discover Nano Motion Plus while enrollment is on its way."
-      href="/membership"
-      action="Explore Nano Motion Plus"
-    />
-  );
+  return <MembershipConfirmationView />;
 }

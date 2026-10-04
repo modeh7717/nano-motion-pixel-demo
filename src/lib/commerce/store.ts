@@ -2,10 +2,10 @@ import { readStored, writeStored } from "../browser-storage.ts";
 import type { StorageIssue, StoragePort } from "../browser-storage.ts";
 import {
   parseCommerceRecord,
-  positiveInteger,
   purchaseSnapshot,
   samePurchase,
 } from "./model.ts";
+import { positiveInteger } from "../validation.ts";
 import type { CartItem, CommerceRecord, Order } from "./model.ts";
 
 export const COMMERCE_STORAGE_KEY = "nano-motion:commerce:v1";

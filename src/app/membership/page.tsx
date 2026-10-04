@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { MembershipActions } from "@/components/membership-actions";
+import { membershipPlan } from "@/data/membership";
+import { formatUsd } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Nano Motion Plus" };
 
@@ -23,21 +26,20 @@ export default function MembershipPage() {
           nm+
         </span>
         <p className="eyebrow">THE EVERYDAY MEMBERSHIP</p>
-        <h2>Nano Motion Plus</h2>
+        <h2>{membershipPlan.name}</h2>
         <p className="plan-price">
-          $19<span>/ month · USD</span>
+          {formatUsd(membershipPlan.amountCents)}
+          <span>/ month · USD</span>
         </p>
         <ul>
-          <li>Member pricing on everyday essentials</li>
-          <li>Early access to new collections</li>
-          <li>Free standard shipping</li>
+          {membershipPlan.benefits.map((benefit) => (
+            <li key={benefit}>{benefit}</li>
+          ))}
         </ul>
-        <button className="button" disabled>
-          Enrollment coming soon
-        </button>
+        <MembershipActions />
         <p className="plan-note">
-          Demo plan with fictional benefits. No enrollment or billing is
-          available in this release.
+          Demo plan with fictional benefits. Joining creates a simulated
+          enrollment. No real charge or recurring billing.
         </p>
       </div>
     </section>

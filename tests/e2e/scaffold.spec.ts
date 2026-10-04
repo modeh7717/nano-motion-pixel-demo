@@ -53,8 +53,8 @@ test("home links to the complete catalog and membership", async ({
     .click();
   await expect(page).toHaveURL(/\/membership$/);
   await expect(
-    page.getByRole("button", { name: "Enrollment coming soon" }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "Join demo membership" }),
+  ).toBeEnabled();
   await expect(page.locator(".plan-price")).toContainText("$19");
 });
 
