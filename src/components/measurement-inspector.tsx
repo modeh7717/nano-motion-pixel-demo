@@ -104,19 +104,14 @@ export function MeasurementInspector() {
                     >
                       {entry.result.status}
                     </span>
-                    <span
-                      className="response-code"
-                      title={
-                        entry.result.status === "suppressed"
-                          ? "This event was suppressed and was not sent."
-                          : "No per-event HTTP response is exposed by the SDK. Inspect batch responses in DevTools Network."
-                      }
-                    >
-                      HTTP — ·{" "}
-                      {entry.result.status === "suppressed"
-                        ? "not sent"
-                        : "unavailable"}
-                    </span>
+                    {entry.result.status === "suppressed" && (
+                      <span
+                        className="response-code"
+                        title="This event was suppressed and was not sent."
+                      >
+                        HTTP — · not sent
+                      </span>
+                    )}
                   </div>
                   <div className="instrumentation-values">
                     {entry.event?.data.contents?.map((content) => (
