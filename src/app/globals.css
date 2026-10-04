@@ -1306,32 +1306,87 @@ em {
   }
 }
 
-/* Developer/demo diagnostics use normal document flow, including on mobile. */
+/* The diagnostic window floats above the page and starts minimized. */
 .measurement-inspector {
-  margin-top: 36px;
-  margin-bottom: 36px;
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 30;
+  width: min(420px, calc(100vw - 40px));
   font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
-.measurement-inspector > details {
+.inspector-window {
+  width: 100%;
+  max-height: min(660px, calc(100dvh - 112px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--line);
+  border-radius: 18px;
   background: #eef0e7;
+  box-shadow: 0 12px 48px #22332b30;
 }
-.measurement-inspector > details > summary {
+.inspector-window[hidden] {
+  display: none;
+}
+.inspector-header {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 22px;
-  cursor: pointer;
-  font-size: 18px;
+  padding: 18px;
+  color: var(--paper);
+  background: var(--ink);
 }
-.measurement-inspector small {
-  color: var(--muted);
+.inspector-header h2 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  margin-bottom: 5px;
+}
+.inspector-header small {
+  color: #d5e1b2;
   font-size: 12px;
 }
+.inspector-header button {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid #ffffff50;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+  cursor: pointer;
+}
+.inspector-launcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--ink);
+  border-radius: 30px;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  box-shadow: 0 4px 20px #22332b30;
+}
+.inspector-count {
+  min-width: 24px;
+  padding: 4px 6px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 11px;
+}
 .inspector-body {
-  padding: 0 22px 22px;
+  min-height: 0;
+  padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .inspector-controls {
   display: flex;
@@ -1367,8 +1422,6 @@ em {
   margin-top: 20px;
   display: grid;
   gap: 12px;
-  max-height: 560px;
-  overflow-y: auto;
 }
 .instrumentation-entries > li {
   padding: 16px;
@@ -1386,11 +1439,16 @@ em {
   color: var(--muted);
   font-size: 12px;
 }
-.dispatch-status {
+.dispatch-status,
+.response-code {
   font-size: 11px;
   border: 1px solid var(--line);
   padding: 4px 8px;
   border-radius: 20px;
+}
+.response-code {
+  color: var(--muted);
+  background: var(--paper);
 }
 .dispatch-handed_to_sdk {
   background: var(--accent);
@@ -1419,11 +1477,13 @@ em {
   margin-top: 12px;
 }
 @media (max-width: 600px) {
-  .inspector-body {
-    padding: 0 14px 14px;
+  .measurement-inspector {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(420px, calc(100vw - 24px));
   }
-  .measurement-inspector > details > summary {
-    padding: 18px 14px;
+  .inspector-body {
+    padding: 14px;
   }
   .instrumentation-heading {
     gap: 8px;

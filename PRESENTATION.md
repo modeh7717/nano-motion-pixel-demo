@@ -4,7 +4,7 @@
 
 Use Node.js 24, install with `npm ci`, and start `npm run dev`. Open the app through your local or hosting environment's normal access method. The supplied public Pixel ID is configured by default; use `.env.local` to override it. No Ads API or Conversions API credential is needed.
 
-Use a fresh browser profile so the cart, consent, order, and membership start empty. In development, the **Local instrumentation log** appears below the footer on every route and the SDK initializes with `debug: true`. In production, append `?measurementDebug=true` to the current URL to reveal the inspector. Navigation links do not retain the query flag: append it again when inspecting the next route. The bounded log remains in memory across client navigation, so opening the panel later still shows recent observations. Changing the flag does not produce another view event.
+Use a fresh browser profile so the cart, consent, order, and membership start empty. In development, the **Interaction log** launcher appears in the bottom-right corner on every route. Click it to open the window; minimize with the header button or Escape. The SDK initializes with `debug: true` in development. In production, append `?measurementDebug=true` to the current URL to reveal the inspector. Navigation links do not retain the query flag: append it again when inspecting the next route. The bounded log remains in memory across client navigation, so opening the panel later still shows recent observations. Changing the flag does not produce another view event.
 
 Open DevTools Console and Network, enable preserve log, and filter Network by `bzrcdn.openai.com` and `bzr.openai.com`. In production, set the debug flag before accepting/restoring consent if you want SDK console debugging: the debug option is read at the document's one initialization and is not changed by later panel toggles. Refresh with the flag to start a new SDK initialization.
 
@@ -62,7 +62,7 @@ Assess production funnel progression with appropriately scoped users/sessions or
 | Browser request/response         | A transport attempt and available response; no attribution/reporting conclusion        |
 | Authorized Ads account reporting | Separate account evidence needed to establish receipt/reporting or attributed outcomes |
 
-The inspector never labels events as delivered. It stores at most 100 observations in memory and has no replay behavior. `queued` does not appear in this implementation: only consent/init commands use the documented loading stub; measure actions during loading are suppressed. SDK batching after handoff is a separate vendor concern, not an application-owned queue.
+The inspector never labels events as delivered. Its HTTP indicator says “not sent” for suppressed events and “unavailable” otherwise: the SDK does not expose per-event HTTP codes. Use DevTools Network for actual batch responses. It stores at most 100 observations in memory and has no replay behavior. `queued` does not appear in this implementation: only consent/init commands use the documented loading stub; measure actions during loading are suppressed. SDK batching after handoff is a separate vendor concern, not an application-owned queue.
 
 Revocation cannot retract a request already sent. Live SDK batch suppression and no replay across revocation must be checked with the real SDK; follow [TESTING.md](./TESTING.md). The sample banner is a technical consent demonstration, not a complete production CMP.
 

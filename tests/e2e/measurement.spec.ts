@@ -8,6 +8,7 @@ import {
   mockSdk,
 } from "./helpers/pixel";
 import type { Route } from "@playwright/test";
+import { openInspector } from "./helpers/inspector";
 
 test("unknown/declined consent loads no SDK; pre-consent commerce is never backfilled", async ({
   page,
@@ -251,8 +252,12 @@ test("revoking during delayed SDK load suppresses actions and current views unti
   await expect(panel.locator('[data-event-name="items_added"]')).toContainText(
     "SDK is loading",
   );
+  await openInspector(page);
+  await page.getByRole("button", { name: "Minimize interaction log" }).click();
   await page.getByRole("button", { name: "Revoke measurement" }).click();
+  await openInspector(page);
   await expect(panel).toContainText("No local observations yet.");
+  await page.getByRole("button", { name: "Minimize interaction log" }).click();
   await held.fulfill({ contentType: "application/javascript", body: mockSdk });
   await expect
     .poll(async () => (await commands(page)).some((call) => call[0] === "init"))

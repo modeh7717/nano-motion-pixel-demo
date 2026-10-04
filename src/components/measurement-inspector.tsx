@@ -1,6 +1,12 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { useMeasurement } from "@/components/measurement-provider";
 import { DIAGNOSTIC_LIMIT } from "@/lib/measurement/diagnostics";
@@ -9,6 +15,10 @@ import { formatUsd } from "@/lib/money";
 export function MeasurementInspector() {
   const params = useSearchParams();
   const { state, actions } = useMeasurement();
+  const [isOpen, setIsOpen] = useState(false);
+  const panelId = useId();
+  const launcher = useRef<HTMLButtonElement>(null);
+  const minimize = useRef<HTMLButtonElement>(null);
   const entries = useSyncExternalStore(
     actions.diagnostics.subscribe,
     actions.diagnostics.getSnapshot,
@@ -17,19 +27,48 @@ export function MeasurementInspector() {
   const enabled =
     process.env.NODE_ENV === "development" ||
     params.get("measurementDebug") === "true";
+  useEffect(() => {
+    if (isOpen && enabled) minimize.current?.focus();
+  }, [isOpen, enabled]);
+  const close = () => {
+    setIsOpen(false);
+    launcher.current?.focus();
+  };
   if (!enabled) return null;
   return (
     <aside
-      className="container measurement-inspector"
+      className="measurement-inspector"
       aria-label="Local instrumentation log"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && isOpen) {
+          event.stopPropagation();
+          close();
+        }
+      }}
     >
-      <details open>
-        <summary>
-          <span>Local instrumentation log</span>
-          <small>
-            {entries.length} / {DIAGNOSTIC_LIMIT} observations
-          </small>
-        </summary>
+      <section
+        id={panelId}
+        className="inspector-window"
+        aria-label="Interaction log window"
+        hidden={!isOpen}
+      >
+        <header className="inspector-header">
+          <div>
+            <h2>Interaction log</h2>
+            <small>
+              {entries.length} / {DIAGNOSTIC_LIMIT} observations
+            </small>
+          </div>
+          <button
+            ref={minimize}
+            type="button"
+            onClick={close}
+            aria-label="Minimize interaction log"
+            title="Minimize (Esc)"
+          >
+            <span aria-hidden="true">−</span>
+          </button>
+        </header>
         <div className="inspector-body">
           <div className="inspector-controls">
             <p>
@@ -43,7 +82,9 @@ export function MeasurementInspector() {
           <p className="inspector-note">
             Local observations only. SDK handoff does not verify OpenAI receipt,
             attribution, or reporting. This in-memory log never replays events
-            and resets on refresh, revocation, or preference reset.
+            and resets on refresh, revocation, or preference reset. HTTP — means
+            no response code is available. The SDK does not expose per-event
+            responses; inspect batch requests in DevTools Network.
           </p>
           {state.error && (
             <p className="inspector-error" role="status">
@@ -69,6 +110,19 @@ export function MeasurementInspector() {
                       className={`dispatch-status dispatch-${entry.result.status}`}
                     >
                       {entry.result.status}
+                    </span>
+                    <span
+                      className="response-code"
+                      title={
+                        entry.result.status === "suppressed"
+                          ? "This event was suppressed and was not sent."
+                          : "No per-event HTTP response is exposed by the SDK. Inspect batch responses in DevTools Network."
+                      }
+                    >
+                      HTTP — ·{" "}
+                      {entry.result.status === "suppressed"
+                        ? "not sent"
+                        : "unavailable"}
                     </span>
                   </div>
                   <div className="instrumentation-values">
@@ -121,7 +175,39 @@ export function MeasurementInspector() {
             </ol>
           )}
         </div>
-      </details>
+      </section>
+      <button
+        ref={launcher}
+        type="button"
+        className="inspector-launcher"
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        aria-label={isOpen ? "Close interaction log" : "Open interaction log"}
+        onClick={() => (isOpen ? close() : setIsOpen(true))}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 4V6a2 2 0 0 1 2-2Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M7 9h10M7 13h6"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span>Interaction log</span>
+        <span className="inspector-count">{entries.length}</span>
+      </button>
     </aside>
   );
 }

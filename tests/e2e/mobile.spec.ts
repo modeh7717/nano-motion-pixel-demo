@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { expectFitsViewport } from "./helpers/layout";
+import { openInspector } from "./helpers/inspector";
 import { accept, installSdk } from "./helpers/pixel";
 
 test("mobile storefront, consent, artwork, and inspector fit the viewport", async ({
@@ -28,10 +29,22 @@ test("mobile storefront, consent, artwork, and inspector fit the viewport", asyn
         images.map((image) => (image as HTMLImageElement).decode()),
       );
     });
+    await openInspector(page);
     await expect(
       page.getByRole("complementary", { name: "Local instrumentation log" }),
     ).toContainText("handed_to_sdk");
     await expectFitsViewport(page);
+    const bounds = await page
+      .getByRole("region", { name: "Interaction log window" })
+      .boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
+    await page
+      .getByRole("button", { name: "Minimize interaction log" })
+      .click();
   }
   expect(errors).toEqual([]);
 });

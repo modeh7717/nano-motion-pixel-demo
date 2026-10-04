@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { expectFitsViewport } from "./helpers/layout";
+import { openInspector } from "./helpers/inspector";
 import type { Page } from "@playwright/test";
 import { accept, commands, events, installSdk } from "./helpers/pixel";
 
@@ -24,12 +25,31 @@ test("production inspector requires the exact flag, and toggling it never adds v
   await expect(inspector(page)).toHaveCount(0);
   await enable(page);
   await expect(inspector(page)).toBeVisible();
+  const window = page.getByRole("region", { name: "Interaction log window" });
+  await expect(window).toBeHidden();
+  await openInspector(page);
   await expect(inspector(page)).toContainText("suppressed");
+  await expect(inspector(page).locator(".response-code").first()).toHaveText(
+    "HTTP — · not sent",
+  );
   await accept(page);
   await expect(inspector(page)).toContainText("handed_to_sdk");
   expect((await commands(page)).find((call) => call[0] === "init")![1]).toEqual(
     { pixelId: "T8bLgKF4RsYWhHwHnPDJWg", debug: true },
   );
+  await expect(inspector(page).locator(".response-code").first()).toHaveText(
+    "HTTP — · unavailable",
+  );
+  const before = await commands(page);
+  await page.getByRole("button", { name: "Minimize interaction log" }).click();
+  await expect(window).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Open interaction log" }),
+  ).toBeFocused();
+  await openInspector(page);
+  await page.keyboard.press("Escape");
+  await expect(window).toBeHidden();
+  expect(await commands(page)).toEqual(before);
   await enable(page, "false");
   await expect(inspector(page)).toHaveCount(0);
   await enable(page);
@@ -53,6 +73,7 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
   await expect(page.locator(".order-id")).toBeVisible();
   await enable(page);
   const panel = inspector(page);
+  await openInspector(page);
   const order = panel.locator('[data-event-name="order_created"]');
   await expect(order).toContainText("$296.00 USD");
   await expect(order).toContainText("29600 minor units");
@@ -62,6 +83,9 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
     `order_${await page.locator(".order-id").textContent()}`,
   );
   await expect(order).toHaveAttribute("data-dispatch-status", "handed_to_sdk");
+  await expect(order.locator(".response-code")).toHaveText(
+    "HTTP — · unavailable",
+  );
   await expect(panel).toContainText("does not verify OpenAI receipt");
   await order.getByText("Payload and event options", { exact: true }).click();
   await expect(order.locator("pre")).toContainText('"event_id"');
@@ -79,6 +103,7 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
     await page.evaluate(() => localStorage.getItem("nano-motion:commerce:v1")),
   ).toBe(before);
   await page.reload();
+  await openInspector(page);
   await expect(page.locator(".order-id")).toBeVisible();
   await expect(panel).toContainText("page_viewed");
   await expect(panel.locator('[data-event-name="order_created"]')).toHaveCount(

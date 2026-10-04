@@ -34,7 +34,7 @@ The desktop browser suite covers:
 - Cart quantity editing, removal, exact totals, persistence, and one blocked-storage journey with an accurate warning.
 - A combined checkout and membership journey: all six measurement events, a quantity-two $296 order, $19 enrollment, persisted conversion IDs, double-submission guards, and no new conversions on confirmation refresh.
 - No SDK load while consent is unknown/declined, no historical backfill, one initialization after acceptance, route/history visits, delayed-load revocation, cross-tab revocation, and working checkout/membership when SDK loading fails.
-- Production inspector flag gating, payload/value/ID display, loading/failure labels, and clearing the log without changing commerce or resending events.
+- Production inspector flag gating, open/minimize/Escape controls and focus return, payload/value/ID display, honest HTTP indicators, loading/failure labels, and clearing the log without changing commerce or resending events.
 
 The two mobile smoke tests cover artwork, consent, navigation and inspector layout at 390 × 844, plus home → catalog → product → cart → checkout → order and confirmation refresh. Business edge cases run once on desktop or in unit tests, rather than repeating the entire suite on mobile.
 
@@ -46,7 +46,7 @@ Measurement tests intercept the documented SDK URL with a controlled fixture. It
 2. Add two jackets and one tee: verify $364.00. Change jackets to three: $512.00. Remove the tee: $444.00. Refresh and verify the saved cart.
 3. Test direct checkout, history navigation, explicit attempt restart, cart edits, and a new independent order. Try blocked or full storage and verify the warning and safe empty state after refresh.
 4. Join membership, refresh confirmation, and revisit the plan. Confirm the same enrollment ID and no real billing. Check membership with an existing cart/order and restricted storage.
-5. Open `?measurementDebug=true` in production. Inspect payloads, values and IDs; clear, refresh, revoke and reset the local log. Follow [PRESENTATION.md](./PRESENTATION.md) for the demo walkthrough.
+5. Open `?measurementDebug=true` in production. Open the bottom-right Interaction log window. Inspect payloads, values and IDs; clear, refresh, revoke and reset the local log. Follow [PRESENTATION.md](./PRESENTATION.md) for the demo walkthrough.
 
 ## Live SDK validation
 
