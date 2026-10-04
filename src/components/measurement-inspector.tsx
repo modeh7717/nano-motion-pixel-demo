@@ -12,22 +12,41 @@ import { useMeasurement } from "@/components/measurement-provider";
 import { DIAGNOSTIC_LIMIT } from "@/lib/measurement/diagnostics";
 import { formatUsd } from "@/lib/money";
 
+/**
+ * Optional demo UI for the bounded local observation log. It reads the shared
+ * store without creating a driver or submitting events. "handed_to_sdk" records
+ * an SDK function call, not confirmed transport, attribution, or Ads reporting.
+ * Numeric HTTP codes are intentionally absent: the SDK exposes no per-event
+ * response callback, so actual batch statuses must be inspected in DevTools.
+ */
 export function MeasurementInspector() {
   const params = useSearchParams();
   const { state, actions } = useMeasurement();
+  // Window visibility is presentation state only. Starting minimized, opening,
+  // and closing never change consent, SDK initialization, or log contents.
   const [isOpen, setIsOpen] = useState(false);
+  // Link the launcher's aria-controls to a stable, hydration-safe panel ID.
   const panelId = useId();
   const launcher = useRef<HTMLButtonElement>(null);
   const minimize = useRef<HTMLButtonElement>(null);
+  // Subscribe even while the window is minimized. The store retains the latest
+  // 100 observations in memory across client navigation; this UI is not a queue
+  // and has no retry/replay or persistence behavior. Its server snapshot is empty.
   const entries = useSyncExternalStore(
     actions.diagnostics.subscribe,
     actions.diagnostics.getSnapshot,
     actions.diagnostics.getServerSnapshot,
   );
+  // Development enables the demo launcher automatically. Production requires
+  // the exact query value "true". Changing this flag only affects visibility;
+  // route measurement observes pathname, so a query toggle adds no page view.
   const enabled =
     process.env.NODE_ENV === "development" ||
     params.get("measurementDebug") === "true";
   useEffect(() => {
+    // Move keyboard focus into the opened window. It is a nonmodal panel: users
+    // can still interact with the page. Minimize/Escape return focus to the
+    // launcher instead of leaving it on a control inside a hidden window.
     if (isOpen && enabled) minimize.current?.focus();
   }, [isOpen, enabled]);
   const close = () => {
@@ -75,6 +94,8 @@ export function MeasurementInspector() {
               Consent: <strong>{state.preference}</strong> · SDK:{" "}
               <strong>{state.sdkStatus}</strong>
             </p>
+            {/* Clear affects diagnostics alone; it cannot alter business state,
+                change consent, or resend any of the recorded interactions. */}
             <button type="button" onClick={actions.diagnostics.clear}>
               Clear local log
             </button>
@@ -88,6 +109,9 @@ export function MeasurementInspector() {
             <p className="inspector-empty">No local observations yet.</p>
           ) : (
             <ol className="instrumentation-entries">
+              {/* Copy before reversing: store snapshots are immutable. Display
+                  newest observations first and use their sequence as identity,
+                  since event names/timestamps can repeat in rapid interactions. */}
               {[...entries].reverse().map((entry) => (
                 <li
                   key={entry.sequence}
@@ -105,6 +129,10 @@ export function MeasurementInspector() {
                       {entry.result.status}
                     </span>
                   </div>
+                  {/* These are the exact normalized event values. Amounts stay
+                      in integer cents; formatUsd only supplies the readable
+                      display. Invalid inputs have event=null and expose no raw
+                      payload, but still show their name/status/reason below. */}
                   <div className="instrumentation-values">
                     {entry.event?.data.contents?.map((content) => (
                       <p key={content.id}>
@@ -135,6 +163,9 @@ export function MeasurementInspector() {
                   <p className="instrumentation-reason">
                     {entry.result.reason}
                   </p>
+                  {/* event_id is an SDK option (the fourth measure argument),
+                      separate from event data. Show both without rebuilding or
+                      dispatching them; disclosure is only a local inspection. */}
                   {entry.event && (
                     <details className="instrumentation-payload">
                       <summary>Payload and event options</summary>
@@ -156,6 +187,8 @@ export function MeasurementInspector() {
           )}
         </div>
       </section>
+      {/* The observation count remains visible while minimized. CSS anchors
+          this launcher and its scrollable window to the bottom-right viewport. */}
       <button
         ref={launcher}
         type="button"

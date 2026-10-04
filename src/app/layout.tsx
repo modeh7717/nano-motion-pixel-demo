@@ -13,6 +13,11 @@ import {
 } from "@/components/measurement-provider";
 import "./globals.css";
 
+// Root layout = the shared shell for every storefront route. This remains a
+// Server Component; browser storage, consent, and SDK calls belong to the client
+// providers below. Keeping those providers here preserves their committed stores
+// during Next.js client navigation. A refresh/new tab creates a new document and
+// new stores, which restore their saved state after hydration.
 export const metadata: Metadata = {
   title: {
     default: "Nano Motion — Made for your next move",
@@ -28,8 +33,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        {/* Measurement must wrap commerce and membership: their providers use
+            its context to translate successful business actions into events.
+            Mounting this provider does not itself load the OpenAI script;
+            loading is controlled by accepted consent in the measurement store. */}
         <MeasurementProvider
           pixelId={
+            // This is a public identifier, not an API credential. An unset value
+            // uses the supplied demo ID. An explicitly empty string is preserved
+            // by ?? and causes the store to disable SDK initialization.
             process.env.NEXT_PUBLIC_OPENAI_PIXEL_ID ?? "T8bLgKF4RsYWhHwHnPDJWg"
           }
         >
@@ -54,6 +66,8 @@ export default function RootLayout({
                   <Navigation />
                 </div>
               </header>
+              {/* Unknown consent shows a choice before page content. Declining
+                  measurement still leaves all shopping actions available. */}
               <ConsentBanner />
               <main id="main-content" tabIndex={-1}>
                 {children}
@@ -82,9 +96,14 @@ export default function RootLayout({
                   <span>Fictional products. Demo only. No real purchases.</span>
                 </div>
                 <div className="container">
+                  {/* Persistent access to reset/revoke consent on every route. */}
                   <MeasurementPreferences />
                 </div>
               </footer>
+              {/* The inspector reads useSearchParams() for its production debug
+                  flag. Suspense keeps that browser-dependent UI from blocking
+                  static rendering of the storefront. Its CSS fixes the launcher
+                  to the viewport even though it is mounted after the footer. */}
               <Suspense fallback={null}>
                 <MeasurementInspector />
               </Suspense>
