@@ -34,7 +34,7 @@ The desktop browser suite covers:
 - Cart quantity editing, removal, exact totals, persistence, and one blocked-storage journey with an accurate warning.
 - A combined checkout and membership journey: all six measurement events, a quantity-two $296 order, $19 enrollment, persisted conversion IDs, double-submission guards, and no new conversions on confirmation refresh.
 - No SDK load while consent is unknown/declined, no historical backfill, one initialization after acceptance, route/history visits, delayed-load revocation, cross-tab revocation, and working checkout/membership when SDK loading fails.
-- Production inspector flag gating, open/minimize/Escape controls and focus return, payload/value/ID display, a not-sent indicator for suppressed events, loading/failure labels, and clearing the log without changing commerce or resending events.
+- Production inspector flag gating, open/minimize/Escape controls and focus return, payload/value/ID display, absence of HTTP labels for suppressed and handed-off events, loading/failure labels, and clearing the log without changing commerce or resending events.
 
 The two mobile smoke tests cover artwork, consent, navigation and inspector layout at 390 × 844, plus home → catalog → product → cart → checkout → order and confirmation refresh. Business edge cases run once on desktop or in unit tests, rather than repeating the entire suite on mobile.
 

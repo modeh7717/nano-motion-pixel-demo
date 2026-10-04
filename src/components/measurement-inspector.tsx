@@ -104,14 +104,6 @@ export function MeasurementInspector() {
                     >
                       {entry.result.status}
                     </span>
-                    {entry.result.status === "suppressed" && (
-                      <span
-                        className="response-code"
-                        title="This event was suppressed and was not sent."
-                      >
-                        HTTP — · not sent
-                      </span>
-                    )}
                   </div>
                   <div className="instrumentation-values">
                     {entry.event?.data.contents?.map((content) => (

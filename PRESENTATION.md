@@ -62,7 +62,7 @@ Assess production funnel progression with appropriately scoped users/sessions or
 | Browser request/response         | A transport attempt and available response; no attribution/reporting conclusion        |
 | Authorized Ads account reporting | Separate account evidence needed to establish receipt/reporting or attributed outcomes |
 
-The inspector never labels events as delivered. Suppressed events show “HTTP — · not sent”; other events have no HTTP badge because the SDK does not expose per-event HTTP codes. Use DevTools Network for actual batch responses. It stores at most 100 observations in memory and has no replay behavior. `queued` does not appear in this implementation: only consent/init commands use the documented loading stub; measure actions during loading are suppressed. SDK batching after handoff is a separate vendor concern, not an application-owned queue.
+The inspector never labels events as delivered. The interaction log displays no HTTP badges; the SDK does not expose per-event HTTP codes. Use DevTools Network for actual batch responses. It stores at most 100 observations in memory and has no replay behavior. `queued` does not appear in this implementation: only consent/init commands use the documented loading stub; measure actions during loading are suppressed. SDK batching after handoff is a separate vendor concern, not an application-owned queue.
 
 Revocation cannot retract a request already sent. Live SDK batch suppression and no replay across revocation must be checked with the real SDK; follow [TESTING.md](./TESTING.md). The sample banner is a technical consent demonstration, not a complete production CMP.
 

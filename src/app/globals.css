@@ -1433,16 +1433,11 @@ em {
   color: var(--muted);
   font-size: 12px;
 }
-.dispatch-status,
-.response-code {
+.dispatch-status {
   font-size: 11px;
   border: 1px solid var(--line);
   padding: 4px 8px;
   border-radius: 20px;
-}
-.response-code {
-  color: var(--muted);
-  background: var(--paper);
 }
 .dispatch-handed_to_sdk {
   background: var(--accent);

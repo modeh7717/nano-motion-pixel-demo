@@ -29,19 +29,13 @@ test("production inspector requires the exact flag, and toggling it never adds v
   await expect(window).toBeHidden();
   await openInspector(page);
   await expect(inspector(page)).toContainText("suppressed");
-  await expect(inspector(page).locator(".response-code").first()).toHaveText(
-    "HTTP — · not sent",
-  );
+  await expect(inspector(page)).not.toContainText("HTTP");
   await accept(page);
   await expect(inspector(page)).toContainText("handed_to_sdk");
   expect((await commands(page)).find((call) => call[0] === "init")![1]).toEqual(
     { pixelId: "T8bLgKF4RsYWhHwHnPDJWg", debug: true },
   );
-  await expect(
-    inspector(page).locator(
-      '[data-dispatch-status="handed_to_sdk"] .response-code',
-    ),
-  ).toHaveCount(0);
+  await expect(inspector(page)).not.toContainText("HTTP");
   const before = await commands(page);
   await page.getByRole("button", { name: "Minimize interaction log" }).click();
   await expect(window).toBeHidden();
@@ -85,7 +79,7 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
     `order_${await page.locator(".order-id").textContent()}`,
   );
   await expect(order).toHaveAttribute("data-dispatch-status", "handed_to_sdk");
-  await expect(order.locator(".response-code")).toHaveCount(0);
+  await expect(panel).not.toContainText("HTTP");
   await order.getByText("Payload and event options", { exact: true }).click();
   await expect(order.locator("pre")).toContainText('"event_id"');
   await expect(order.locator("pre")).not.toContainText('"group_id"');
