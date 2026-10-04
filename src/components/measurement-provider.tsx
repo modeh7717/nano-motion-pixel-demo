@@ -27,7 +27,10 @@ export function MeasurementProvider({
     createMeasurementStore({
       driver: createBrowserPixelDriver(),
       pixelId,
-      debug: process.env.NODE_ENV === "development",
+      debug: () =>
+        process.env.NODE_ENV === "development" ||
+        new URLSearchParams(window.location.search).get("measurementDebug") ===
+          "true",
     }),
   );
   useEffect(() => {

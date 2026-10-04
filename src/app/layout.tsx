@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
 import { Navigation } from "@/components/navigation";
 import { CommerceProvider } from "@/components/commerce-provider";
 import { MembershipProvider } from "@/components/membership-provider";
+import { MeasurementInspector } from "@/components/measurement-inspector";
 import {
   MeasurementProvider,
   MeasurementPreferences,
@@ -83,6 +85,9 @@ export default function RootLayout({
                   <MeasurementPreferences />
                 </div>
               </footer>
+              <Suspense fallback={null}>
+                <MeasurementInspector />
+              </Suspense>
             </MembershipProvider>
           </CommerceProvider>
         </MeasurementProvider>

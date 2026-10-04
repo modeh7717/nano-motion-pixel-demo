@@ -1,6 +1,6 @@
 # Nano Motion
 
-A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phases 1–4: Scaffold, Commerce, Membership, and Consent and measurement** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
+A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phases 1–5: Scaffold, Commerce, Membership, Consent and measurement, and Debugging and presentation** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
 
 ## What works
 
@@ -16,8 +16,9 @@ A fictional activewear storefront for the OpenAI Measurement Pixel demo. This re
 - Stable product IDs and prices stored as integer USD cents: `14800`, `11800`, and `6800`.
 - Persisted measurement choices, a consent banner, footer revocation/reset, and cross-tab preference updates.
 - A centralized, consent-gated OpenAI Pixel adapter and all six standard events with validated amounts and stable conversion IDs.
+- A bounded local instrumentation inspector with payload details, suppression reasons, and SDK status.
 
-The event inspector belongs to Phase 5. Confirmation routes do not fabricate a successful outcome or resend conversions. Demo checkout and membership collect no personal or payment information and charge nothing.
+Confirmation routes do not fabricate a successful outcome or resend conversions. Demo checkout and membership collect no personal or payment information and charge nothing. See [PRESENTATION.md](./PRESENTATION.md) for the walkthrough, event rationale, and evidence boundaries.
 
 ## Develop
 
@@ -109,6 +110,14 @@ The route observer uses committed pathname changes. Returning through history cr
 
 Checkout IDs use `checkout_<attempt ID>`, order IDs `order_<order ID>`, and membership IDs `subscription_<enrollment ID>` in the fourth argument's `event_id`. Two jackets report `29600` USD cents and quantity `2`; an add-one action reports `14800` and quantity `1`. Per-content amounts are omitted. No advanced matching, synthetic attribution identifiers, server conversions, or application replay queue are added. SDK debug logging is enabled in development.
 
+## Local instrumentation inspector
+
+The **Local instrumentation log** appears below the footer in development or when the current production URL contains exactly `?measurementDebug=true`. Query changes do not create another route view. Production links do not retain the flag; append it to the current route when inspecting. SDK `debug: true` is selected in development or if the flag is present when the SDK initializes; later flag changes do not reinitialize it.
+
+The inspector shows timestamps, event names, IDs/names/quantities, amount/currency, stable event IDs, payload/options, consent, SDK status, and local failure messages. Its statuses are `suppressed`, `handed_to_sdk`, and `failed`, with a reason. There is no `queued` measurement status because loading-time actions are withheld rather than queued. SDK handoff is not receipt acknowledgment.
+
+`src/lib/measurement/diagnostics.ts` retains only the latest 100 validated observations in memory across client navigation, including while the panel is hidden. Invalid inputs are represented by event name/reason without raw data. Nothing is written to storage or used for retry/replay. Clear only clears diagnostics; refresh, revocation, or consent reset also clears them. A current view may appear once as suppressed and later as handed off after readiness; only the latter represents an SDK call. Payload disclosure belongs solely to this opt-in developer/demo UI.
+
 ## Design and OpenAI documentation review
 
 The complete design and these official pages were reviewed on **October 3, 2026 (America/Los_Angeles)** and checked again on **October 4, 2026 (UTC)** for Phase 4:
@@ -130,6 +139,6 @@ The docs still describe item-level `amount` without distinguishing unit price fr
 
 To deploy this scaffold on Vercel, import this repository, choose the Next.js framework preset, use `npm ci` for installation and `npm run build` for the build, and use a Node.js version supported by the manifest. No custom output directory or secrets are required. Deployment has not been performed or validated.
 
-Phase 5 adds the local event inspector and presentation instructions. Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project.
+Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project. Presentation instructions are in [PRESENTATION.md](./PRESENTATION.md).
 
 Future server-side measurement would send confirmed outcomes through the Conversions API and reuse the Pixel ID, event name, and stable event ID for deduplication. It requires a backend and a server-held Conversions API key; browser code must never contain that key. No server integration is required for this demo.

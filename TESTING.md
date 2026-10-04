@@ -1,4 +1,4 @@
-# Phases 1–4 validation
+# Phases 1–5 validation
 
 ## Reproduce
 
@@ -15,7 +15,7 @@ npm run test:e2e
 
 Use `--cache /workspace/.npm-cache` with npm installation commands in the cloud machine. If Chromium is absent, run `npx playwright install chromium` first. The test config also accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` and automatically uses `/usr/bin/chromium` when present.
 
-The browser suite launches a production server on port 3100, runs thirty scenarios at each of two viewport sizes (1440 × 1000 desktop and 390 × 844 mobile), then stops that server. It uses two workers and no automatic retries. A successful run executes **60 browser tests**. The domain suite runs **35 Node tests**. No tests are skipped. Measurement scenarios intercept the documented SDK URL with a controlled test implementation; ordinary storefront scenarios keep consent unknown and make no SDK requests. These are application integration checks, not proof of live SDK receipt.
+The browser suite launches a production server on port 3100, runs thirty-five scenarios at each of two viewport sizes (1440 × 1000 desktop and 390 × 844 mobile), then stops that server. It uses two workers and no automatic retries. A successful run executes **70 browser tests**. The domain suite runs **41 Node tests**. No tests are skipped. Measurement scenarios intercept the documented SDK URL with a controlled test implementation; ordinary storefront scenarios keep consent unknown and make no SDK requests. These are application integration checks, not proof of live SDK receipt.
 
 ## Automated coverage
 
@@ -40,8 +40,11 @@ The browser suite launches a production server on port 3100, runs thirty scenari
 - Consent restoration, acceptance, decline, revocation/reset, cross-tab changes, and missing/corrupt/unavailable preference storage.
 - Deferred SDK loading, false consent before initialization, one init per document, delayed/blocked scripts, and no historical backfill.
 - Committed route/history visits without duplicate events from rerenders, query/hash changes, reused attempts, or confirmation refresh.
+- Exact production debug-flag gating, initialization-time SDK debug configuration, and panel toggles without new route events.
+- Local payload/value/ID details, accurate suppression/loading/failure labels, and responsive inspector layout.
+- A 100-entry diagnostic bound, invalid-input redaction, refresh/revocation/reset clearing, and clear operations that cannot alter commerce or resend events.
 
-The tests save full-page home, cart, checkout, order, membership, enrollment confirmation, and consent screenshots in their per-test `test-results` directories. Failures additionally produce screenshots and traces. These generated files are ignored by Git.
+The tests save full-page home, cart, checkout, order, membership, enrollment confirmation, consent, and inspector screenshots in their per-test `test-results` directories. Failures additionally produce screenshots and traces. These generated files are ignored by Git.
 
 ## Manual review
 
@@ -57,12 +60,17 @@ The tests save full-page home, cart, checkout, order, membership, enrollment con
 10. Refresh confirmation, revisit membership, and use “View your membership.” Confirm the same enrollment. Repeat with blocked or full storage and verify the warning and safe empty state after refresh.
 11. Enroll while a cart and completed order exist. Confirm both remain unchanged and no measurement requests are sent if consent is unknown or declined.
 12. Visit an unknown product slug and an unknown route. Confirm the branded 404 and collection link.
+13. In production, append `?measurementDebug=true` to the current URL. Inspect event values/options and local status; toggle the flag and verify it does not create another view. In development the inspector appears on every route.
+14. Clear the local log. Confirm the cart/order/membership and measurement choice remain unchanged and no events resend. Refresh, revoke, or reset and confirm prior log entries disappear.
+15. Use [PRESENTATION.md](./PRESENTATION.md) to rehearse the business walkthrough and distinguish the local log from actual SDK/network evidence.
 
 ## Verified in this cloud instance
 
 Before its separate commit, Phase 2 passed the production build, ESLint, TypeScript, 15 domain tests, and 28 Chromium tests. The combined Phases 1–3 passed the production build, ESLint, TypeScript, 23 domain tests, and 42 Chromium tests. Desktop and mobile journey screenshots were visually reviewed. Node.js was 24.19.0 and npm was 11.9.0.
 
 Phase 4 passed the production build, ESLint, TypeScript, 35 domain tests, and 60 desktop/mobile browser checks using the controlled SDK. A development-mode journey separately verified Strict Mode did not duplicate initialization, product view, add, checkout, or order; initialization used `debug: true`. Use `localhost` for local Next.js development checks: this version blocks HMR requests from an unconfigured alternate origin such as `127.0.0.1`. Production tests use `127.0.0.1` normally. Consent layouts were visually reviewed. Direct SDK retrieval returned HTTP 403; an unmocked browser loading attempt also failed to obtain a script response. Live SDK receipt and batching are not claimed.
+
+Phase 5 passed the production build, ESLint, TypeScript, 41 unit tests, and 70 desktop/mobile browser checks. Inspector screenshots for successful handoff and SDK failure were visually reviewed. A development-mode check verified automatic inspector visibility without a query flag, visibility after client navigation, one initialization/view under Strict Mode, and log clearing without SDK side effects. The diagnostic-clear guard was tested to ensure revocation closes consent before notifying subscribers. Live SDK transport/receipt limitations remain unchanged.
 
 ## Measurement and live SDK checks
 

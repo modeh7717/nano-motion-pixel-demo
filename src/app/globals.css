@@ -1305,3 +1305,127 @@ em {
     flex-direction: column;
   }
 }
+
+/* Developer/demo diagnostics use normal document flow, including on mobile. */
+.measurement-inspector {
+  margin-top: 36px;
+  margin-bottom: 36px;
+  font-size: 13px;
+}
+.measurement-inspector > details {
+  border: 1px solid var(--line);
+  background: #eef0e7;
+}
+.measurement-inspector > details > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px;
+  cursor: pointer;
+  font-size: 18px;
+}
+.measurement-inspector small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.inspector-body {
+  padding: 0 22px 22px;
+}
+.inspector-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.inspector-controls button {
+  padding: 10px 14px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.inspector-note {
+  max-width: 880px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 16px 0;
+}
+.inspector-error {
+  padding: 12px;
+  border-left: 3px solid var(--orange);
+  background: var(--paper);
+}
+.inspector-empty {
+  margin-top: 24px;
+}
+.instrumentation-entries {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  display: grid;
+  gap: 12px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+.instrumentation-entries > li {
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  min-width: 0;
+}
+.instrumentation-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.instrumentation-heading time {
+  color: var(--muted);
+  font-size: 12px;
+}
+.dispatch-status {
+  font-size: 11px;
+  border: 1px solid var(--line);
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+.dispatch-handed_to_sdk {
+  background: var(--accent);
+}
+.dispatch-failed {
+  background: #f7e1d8;
+}
+.instrumentation-values p {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+.instrumentation-reason {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.instrumentation-payload summary {
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 12px;
+}
+.instrumentation-payload pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  margin-top: 12px;
+}
+@media (max-width: 600px) {
+  .inspector-body {
+    padding: 0 14px 14px;
+  }
+  .measurement-inspector > details > summary {
+    padding: 18px 14px;
+  }
+  .instrumentation-heading {
+    gap: 8px;
+  }
+}

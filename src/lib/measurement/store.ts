@@ -1,6 +1,7 @@
 import { readStored, writeStored } from "../browser-storage.ts";
 import type { StorageIssue, StoragePort } from "../browser-storage.ts";
 import { record } from "../validation.ts";
+import { createInstrumentationLog } from "./diagnostics.ts";
 import {
   buildRouteViewed,
   buildItemAdded,
@@ -16,6 +17,7 @@ import type {
   PixelDriver,
   MeasurementEvent,
   DispatchResult,
+  EventName,
 } from "./types.ts";
 
 export const CONSENT_STORAGE_KEY = "nano-motion:consent:v1";
@@ -51,64 +53,76 @@ export function createMeasurementStore({
 }: {
   driver: PixelDriver;
   pixelId: string;
-  debug?: boolean;
+  debug?: boolean | (() => boolean);
   storage?: () => StoragePort;
 }) {
   let state = initial;
-  let visit: { pathname: string; measured: boolean } | null = null;
+  let visit: { pathname: string; measured: boolean; observed: boolean } | null =
+    null;
+  const diagnostics = createInstrumentationLog();
   const listeners = new Set<() => void>();
   const publish = (next: Partial<MeasurementState>) => {
     state = Object.freeze({ ...state, ...next });
     listeners.forEach((listener) => listener());
   };
-  const dispatch = (build: () => MeasurementEvent): DispatchResult => {
+  const dispatch = (
+    name: EventName,
+    build: () => MeasurementEvent,
+  ): DispatchResult => {
     let event: MeasurementEvent;
     try {
       event = build();
     } catch {
-      return { status: "suppressed", reason: "Invalid event data." };
+      return diagnostics.record(name, null, {
+        status: "suppressed",
+        reason: "Invalid event data.",
+      });
     }
     if (!state.ready || state.preference !== "accepted")
-      return {
+      return diagnostics.record(name, event, {
         status: "suppressed",
         reason: "Measurement consent is not accepted.",
-      };
+      });
     if (state.sdkStatus === "failed")
-      return {
+      return diagnostics.record(name, event, {
         status: "failed",
         reason: state.error ?? "Measurement SDK failed.",
-      };
+      });
     if (state.sdkStatus !== "ready")
-      return {
+      return diagnostics.record(name, event, {
         status: "suppressed",
         reason: "Measurement SDK is loading; this action will not be replayed.",
-      };
+      });
     try {
       driver.measure(event);
-      return {
+      return diagnostics.record(name, event, {
         status: "handed_to_sdk",
         reason: "Local SDK handoff; receipt is not verified.",
-      };
+      });
     } catch {
       publish({
         sdkStatus: "failed",
         error: "Measurement dispatch failed. Shopping remains available.",
       });
-      return { status: "failed", reason: state.error! };
+      return diagnostics.record(name, event, {
+        status: "failed",
+        reason: state.error!,
+      });
     }
   };
   const view = () => {
-    if (
-      !visit ||
-      visit.measured ||
-      state.preference !== "accepted" ||
-      state.sdkStatus !== "ready"
-    )
-      return;
+    if (!visit || visit.measured) return;
     const event = buildRouteViewed(visit.pathname);
     if (!event) return;
+    if (state.preference !== "accepted" || state.sdkStatus !== "ready") {
+      if (!visit.observed) {
+        visit.observed = true;
+        dispatch(event.name, () => event);
+      }
+      return;
+    }
     visit.measured = true;
-    dispatch(() => event);
+    dispatch(event.name, () => event);
   };
   const setSdkConsent = (accepted: boolean) => {
     try {
@@ -133,20 +147,22 @@ export function createMeasurementStore({
     }
     publish({ sdkStatus: "loading" });
     try {
-      driver.load({ pixelId, debug }).then(
-        () => {
-          if (state.sdkStatus !== "loading") return;
-          if (!setSdkConsent(state.preference === "accepted")) return;
-          publish({ sdkStatus: "ready" });
-          view();
-        },
-        () =>
-          publish({
-            sdkStatus: "failed",
-            error:
-              "Measurement script could not load. Shopping remains available.",
-          }),
-      );
+      driver
+        .load({ pixelId, debug: typeof debug === "function" ? debug() : debug })
+        .then(
+          () => {
+            if (state.sdkStatus !== "loading") return;
+            if (!setSdkConsent(state.preference === "accepted")) return;
+            publish({ sdkStatus: "ready" });
+            view();
+          },
+          () =>
+            publish({
+              sdkStatus: "failed",
+              error:
+                "Measurement script could not load. Shopping remains available.",
+            }),
+        );
     } catch {
       publish({
         sdkStatus: "failed",
@@ -169,6 +185,7 @@ export function createMeasurementStore({
     }
   };
   return {
+    diagnostics,
     getSnapshot: () => state,
     getServerSnapshot: () => initial,
     subscribe: (listener: () => void) => {
@@ -190,6 +207,7 @@ export function createMeasurementStore({
       if (preference !== "accepted") {
         publish({ preference });
         setSdkConsent(false);
+        diagnostics.clear();
       }
       const storageIssue = writeStored(storage, CONSENT_STORAGE_KEY, {
         version: 1,
@@ -206,19 +224,23 @@ export function createMeasurementStore({
         issue = "corrupt";
       }
       applyPreference(preference, issue);
+      if (preference !== "accepted") diagnostics.clear();
     },
     observeRoute: (pathname: string) => {
-      if (visit?.pathname !== pathname) visit = { pathname, measured: false };
+      if (visit?.pathname !== pathname)
+        visit = { pathname, measured: false, observed: false };
       view();
     },
     trackItemAdded: (productId: string, quantity: number) =>
-      dispatch(() => buildItemAdded(productId, quantity)),
+      dispatch("items_added", () => buildItemAdded(productId, quantity)),
     trackCheckoutStarted: (attempt: CheckoutAttempt) =>
-      dispatch(() => buildCheckoutStarted(attempt)),
+      dispatch("checkout_started", () => buildCheckoutStarted(attempt)),
     trackOrderCreated: (order: Order) =>
-      dispatch(() => buildOrderCreated(order)),
+      dispatch("order_created", () => buildOrderCreated(order)),
     trackSubscriptionCreated: (enrollment: Enrollment) =>
-      dispatch(() => buildSubscriptionCreated(enrollment)),
+      dispatch("subscription_created", () =>
+        buildSubscriptionCreated(enrollment),
+      ),
   };
 }
 export type MeasurementStore = ReturnType<typeof createMeasurementStore>;
