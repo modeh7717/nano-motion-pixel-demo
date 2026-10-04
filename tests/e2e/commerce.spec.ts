@@ -136,6 +136,10 @@ test("direct checkout creates one attempt, reuses refresh and history, and suppo
   ).toBeEnabled();
   expect((await readCommerce(page)).checkout.id).toBe(first);
   await page.getByRole("link", { name: "Return to cart" }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(
+    page.getByRole("button", { name: "Begin demo checkout" }),
+  ).toBeEnabled();
   await page.goBack();
   await expect(
     page.getByRole("button", { name: "Complete demo order" }),

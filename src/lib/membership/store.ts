@@ -21,10 +21,12 @@ export function createMembershipStore({
   storage = () => window.localStorage,
   uuid = () => crypto.randomUUID(),
   now = () => new Date().toISOString(),
+  onEnroll,
 }: {
   storage?: () => StoragePort;
   uuid?: () => string;
   now?: () => string;
+  onEnroll?: (enrollment: Enrollment) => void;
 } = {}) {
   let state = serverState;
   let enrolling = false;
@@ -77,6 +79,11 @@ export function createMembershipStore({
         // Save the outcome before publication. A failed write still retains it in memory.
         const storageIssue = writeStored(storage, MEMBERSHIP_STORAGE_KEY, next);
         publish({ ...next, ready: true, storageIssue });
+        try {
+          onEnroll?.(enrollment);
+        } catch {
+          /* Enrollment remains complete. */
+        }
         return enrollment;
       } finally {
         enrolling = false;

@@ -1241,3 +1241,67 @@ em {
     font-size: 30px;
   }
 }
+
+/* Consent choices remain in document flow and never cover shopping controls. */
+.consent-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px max(20px, calc((100vw - 1280px) / 2));
+  background: #e8ecdf;
+  border-top: 1px solid var(--line);
+}
+.consent-banner h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.consent-banner p {
+  max-width: 720px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.consent-actions button {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 14px 18px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.measurement-preferences {
+  padding: 20px 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+}
+.measurement-preferences button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0;
+  font: inherit;
+}
+.measurement-preferences p {
+  width: 100%;
+}
+.consent-note {
+  margin-top: 8px;
+}
+@media (max-width: 900px) {
+  .consent-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

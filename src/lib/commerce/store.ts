@@ -6,7 +6,17 @@ import {
   samePurchase,
 } from "./model.ts";
 import { positiveInteger } from "../validation.ts";
-import type { CartItem, CommerceRecord, Order } from "./model.ts";
+import type {
+  CartItem,
+  CheckoutAttempt,
+  CommerceRecord,
+  Order,
+} from "./model.ts";
+
+export type CommerceEvent =
+  | { type: "item-added"; productId: string; quantity: number }
+  | { type: "checkout-started"; attempt: CheckoutAttempt }
+  | { type: "order-created"; order: Order };
 
 export const COMMERCE_STORAGE_KEY = "nano-motion:commerce:v1";
 const emptyRecord: CommerceRecord = Object.freeze({
@@ -27,16 +37,26 @@ type Dependencies = {
   storage?: () => StoragePort;
   uuid?: () => string;
   now?: () => string;
+  onEvent?: (event: CommerceEvent) => void;
 };
 
 export function createCommerceStore({
   storage = () => window.localStorage,
   uuid = () => crypto.randomUUID(),
   now = () => new Date().toISOString(),
+  onEvent,
 }: Dependencies = {}) {
   let state = serverState;
   let completing = false;
   const listeners = new Set<() => void>();
+  const emit = (event: CommerceEvent) => {
+    // Business outcomes never depend on optional instrumentation succeeding.
+    try {
+      onEvent?.(event);
+    } catch {
+      /* Commerce remains complete. */
+    }
+  };
   const publish = (next: CommerceState) => {
     state = Object.freeze(next);
     listeners.forEach((listener) => listener());
@@ -73,6 +93,7 @@ export function createCommerceStore({
       snapshot,
     });
     save({ version: 1, cart: state.cart, checkout, order: state.order });
+    emit({ type: "checkout-started", attempt: checkout });
     return checkout;
   };
 
@@ -110,6 +131,7 @@ export function createCommerceStore({
           )
         : [...state.cart, { productId, quantity }];
       updateCart(cart);
+      emit({ type: "item-added", productId, quantity });
     },
     setQuantity: (productId: string, quantity: number) => {
       requireReady();
@@ -157,6 +179,7 @@ export function createCommerceStore({
           checkout: Object.freeze({ ...attempt, status: "completed" }),
           order,
         });
+        emit({ type: "order-created", order });
         return order;
       } finally {
         completing = false;

@@ -10,14 +10,27 @@ import {
 import { createCommerceStore } from "@/lib/commerce/store";
 import type { CommerceStore } from "@/lib/commerce/store";
 import type { StorageIssue } from "@/lib/browser-storage";
+import { useMeasurement } from "@/components/measurement-provider";
 
 const CommerceContext = createContext<CommerceStore | null>(null);
 
 export function CommerceProvider({ children }: { children: React.ReactNode }) {
-  const [store] = useState(() => createCommerceStore());
+  const { actions: measurement } = useMeasurement();
+  const [store] = useState(() =>
+    createCommerceStore({
+      onEvent: (event) => {
+        if (event.type === "item-added")
+          measurement.trackItemAdded(event.productId, event.quantity);
+        else if (event.type === "checkout-started")
+          measurement.trackCheckoutStarted(event.attempt);
+        else measurement.trackOrderCreated(event.order);
+      },
+    }),
+  );
   useEffect(() => {
+    measurement.hydrate();
     store.hydrate();
-  }, [store]);
+  }, [store, measurement]);
   return (
     <CommerceContext.Provider value={store}>
       {children}

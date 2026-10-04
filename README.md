@@ -1,6 +1,6 @@
 # Nano Motion
 
-A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phase 1 — Scaffold**, **Phase 2 — Commerce**, and **Phase 3 — Membership** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
+A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phases 1–4: Scaffold, Commerce, Membership, and Consent and measurement** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
 
 ## What works
 
@@ -14,8 +14,10 @@ A fictional activewear storefront for the OpenAI Measurement Pixel demo. This re
 - Shared navigation, route metadata, branded 404s, keyboard focus styles, and a skip link.
 - Local illustrations: SVG product artwork and a PNG runner illustration, with no external image or font dependency.
 - Stable product IDs and prices stored as integer USD cents: `14800`, `11800`, and `6800`.
+- Persisted measurement choices, a consent banner, footer revocation/reset, and cross-tab preference updates.
+- A centralized, consent-gated OpenAI Pixel adapter and all six standard events with validated amounts and stable conversion IDs.
 
-Consent, Pixel integration, and the event inspector belong to later phases. Confirmation routes do not fabricate a successful outcome. No measurement SDK is loaded, and no measurement requests are sent in this release. Demo checkout and membership collect no personal or payment information and charge nothing.
+The event inspector belongs to Phase 5. Confirmation routes do not fabricate a successful outcome or resend conversions. Demo checkout and membership collect no personal or payment information and charge nothing.
 
 ## Develop
 
@@ -27,7 +29,7 @@ npm ci
 npm run dev
 ```
 
-The development server uses port 3000. No environment variables, API keys, database, authentication, or payment service are needed. `.env.example` reserves the public Pixel ID for Phase 4; setting it does not enable measurement in this release.
+The development server uses port 3000. No API keys, database, authentication, or payment service are needed. The supplied public demo Pixel ID is the default. To override it, copy `.env.example` to `.env.local`, edit `NEXT_PUBLIC_OPENAI_PIXEL_ID`, and restart/rebuild; Next.js inlines public configuration at build time. An explicitly empty ID disables initialization and records a local configuration error. Measurement requires acceptance of the on-page choice.
 
 For the cloud machine, keep npm's cache in a writable directory:
 
@@ -86,9 +88,30 @@ A separate context and `nano-motion:membership:v1` storage record hold the enrol
 
 Joining saves the outcome before navigating to confirmation. Repeated clicks, returning to the plan page, and refresh reuse the existing enrollment. Confirmation only reads saved state. Corrupt records restore a safe empty state; storage denial and quota failure retain the enrollment in memory and disclose that refresh may lose it. These guards apply within the current document, as with commerce.
 
+## Consent and measurement
+
+`src/lib/measurement` contains pure payload builders, the browser SDK driver, and a per-document consent/dispatch store. Commerce and membership emit vendor-independent business hooks only for successful new actions, after saving their outcomes. Provider adapters translate those hooks into measurement calls; UI components never call `oaiq` directly. Optional instrumentation failures cannot roll back shopping.
+
+Consent is restored after hydration from `nano-motion:consent:v1`. Missing, corrupt, or unreadable preferences become `unknown`. Unknown and declined choices do not load the SDK. Accept/Decline controls have equal prominence; the footer can revoke consent or reset it to unknown. Storage failures retain the choice for this visit and display a notice. Changes in another tab close the measurement gate in this tab too.
+
+On first acceptance, install the official queue stub, enqueue `consent(false)` before one `init`, and load the documented SDK URL. Only after successful loading, and while acceptance still holds, call `consent(true)` and measure the current eligible view once. The stub never receives measure calls during loading. Shopping actions and conversions before acceptance or during loading are suppressed without retention or replay. A script failure/timeout keeps shopping usable and disables dispatch for that document; refresh to retry. Revocation immediately closes the local gate and calls `consent(false)`. Already sent requests cannot be retracted; SDK batching and live revocation behavior still require the live checks in TESTING.
+
+The route observer uses committed pathname changes. Returning through history creates a legitimate visit; rerenders, effect replay, and query/hash changes do not. Product routes use `contents_viewed`; the seven configured generic routes use `page_viewed`; unknown routes send neither. Direct checkout creates a business attempt once, but its event is suppressed if the SDK is still loading. Refresh and reused attempts never backfill or resend it.
+
+| Event                  | Trigger                       | Value                                                |
+| ---------------------- | ----------------------------- | ---------------------------------------------------- |
+| `page_viewed`          | Eligible generic route visit  | Page ID/name; no amount                              |
+| `contents_viewed`      | Resolved product visit        | One product and unit price                           |
+| `items_added`          | Successful cart addition      | Added quantity delta and its value                   |
+| `checkout_started`     | New nonempty checkout attempt | Complete attempt snapshot and total                  |
+| `order_created`        | Newly saved simulated order   | Complete order snapshot and total                    |
+| `subscription_created` | Newly saved enrollment        | `plan_enrollment`, plan ID, initial `1900` USD cents |
+
+Checkout IDs use `checkout_<attempt ID>`, order IDs `order_<order ID>`, and membership IDs `subscription_<enrollment ID>` in the fourth argument's `event_id`. Two jackets report `29600` USD cents and quantity `2`; an add-one action reports `14800` and quantity `1`. Per-content amounts are omitted. No advanced matching, synthetic attribution identifiers, server conversions, or application replay queue are added. SDK debug logging is enabled in development.
+
 ## Design and OpenAI documentation review
 
-The complete design and these official pages were reviewed on **October 3, 2026 (America/Los_Angeles)**:
+The complete design and these official pages were reviewed on **October 3, 2026 (America/Los_Angeles)** and checked again on **October 4, 2026 (UTC)** for Phase 4:
 
 - [Measurement Pixel](https://developers.openai.com/ads/measurement-pixel)
 - [Supported Events](https://developers.openai.com/ads/supported-events)
@@ -97,7 +120,9 @@ The complete design and these official pages were reviewed on **October 3, 2026 
 
 The six proposed events are supported: `page_viewed`, `contents_viewed`, `items_added`, `checkout_started`, `order_created`, and `subscription_created`. Commerce/view payloads use `type: "contents"`; subscription payloads use `type: "plan_enrollment"` and may include `plan_id`. Amounts and quantities are integers; an amount requires a currency. Pixel `event_id` belongs in the fourth argument, separate from the data object. Browser content items may use `id`, `name`, `content_type`, `quantity`, `amount`, and `currency`; `group_id` and `variant_dict` are server-only fields.
 
-The docs still describe item-level `amount` without distinguishing unit price from line total. The design's decision to omit that optional field remains appropriate. The documented consent API is `oaiq("consent", false)` before initialization and `oaiq("consent", true)` after acceptance. Blocked events are not replayed; batching means loading/revocation behavior still needs runtime testing in Phase 4. The SDK source is `https://bzrcdn.openai.com/sdk/oaiq.min.js`; transport uses `https://bzr.openai.com`. Neither destination is accessed by this release.
+The docs still describe item-level `amount` without distinguishing unit price from line total. The design's decision to omit that optional field remains appropriate. The documented consent API is `oaiq("consent", false)` before initialization and `oaiq("consent", true)` after acceptance. Blocked events are not replayed. The SDK source is `https://bzrcdn.openai.com/sdk/oaiq.min.js`; transport uses `https://bzr.openai.com`. The application accesses the SDK only after acceptance.
+
+**Loading decision:** the design describes queueing consented actions in section 6, but section 8 permits suppressing loading-time actions to avoid replay across revocation. This implementation follows that cautious alternative. Official docs confirm batching and blocked-event suppression but do not provide a queue-discard API. Automated integration checks use a controlled SDK response, so they prove application command ordering and payloads rather than actual SDK transport or receipt. The SDK URL returned HTTP 403 from this cloud environment; live receipt and SDK batch behavior remain unverified.
 
 **Repository/design discrepancy:** the design's opening implementation note describes a completed browser integration and references README/TESTING files that were absent from the starting repository. This scaffold does not treat that note as proof of implemented functionality. The original design is preserved unchanged.
 
@@ -105,6 +130,6 @@ The docs still describe item-level `amount` without distinguishing unit price fr
 
 To deploy this scaffold on Vercel, import this repository, choose the Next.js framework preset, use `npm ci` for installation and `npm run build` for the build, and use a Node.js version supported by the manifest. No custom output directory or secrets are required. Deployment has not been performed or validated.
 
-Phase 4 adds consent and the centralized Pixel adapter; Phase 5 adds the local event inspector. Stable order and enrollment IDs are retained now so later conversion event IDs can be derived from the persisted outcomes. The full design's acceptance criteria apply to the complete project, including its later measurement phases.
+Phase 5 adds the local event inspector and presentation instructions. Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project.
 
 Future server-side measurement would send confirmed outcomes through the Conversions API and reuse the Pixel ID, event name, and stable event ID for deduplication. It requires a backend and a server-held Conversions API key; browser code must never contain that key. No server integration is required for this demo.
