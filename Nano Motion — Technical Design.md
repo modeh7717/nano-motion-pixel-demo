@@ -69,7 +69,6 @@ In production, add `?measurementDebug=true` to open the bottom-right Interaction
 
 ## Recommended next steps
 
-- Resolve attribution-cookie startup behavior; validate real ad-click references, loading, and revocation with the live SDK.
 - Run a controlled campaign and reconcile confirmed outcomes, account reporting, spend, and return before scaling.
 - Add authoritative backend purchase/billing outcomes and consider the Conversions API, keeping credentials server-side and reusing event IDs for browser/server deduplication.
 - Extend currency handling and regional consent for international rollout; implement real membership billing and renewals with appropriate outcome measurement.
