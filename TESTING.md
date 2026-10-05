@@ -15,7 +15,7 @@ npm run test:e2e
 
 If Chromium is absent, run `npx playwright install chromium`. The config uses `/usr/bin/chromium` when available and accepts `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. In the cloud, use `--cache /workspace/.npm-cache` with installation commands.
 
-Browser tests start and stop a production server on port 3100. Run a build first, including after changing application code. The suite runs **13 desktop scenarios and 2 mobile smoke tests**, with two workers and no retries or skipped tests. Screenshots and traces are saved only on failure in the ignored `test-results` directory.
+Browser tests start and stop a production server on port 3100. Run a build first, including after changing application code. The suite runs **14 desktop scenarios and 2 mobile smoke tests**, with two workers and no retries or skipped tests. Screenshots and traces are saved only on failure in the ignored `test-results` directory.
 
 To run just one browser group:
 
@@ -27,6 +27,8 @@ npm run test:e2e -- --project=mobile
 ## Coverage
 
 The **41 fast unit tests** cover money and quantity validation, cart/checkout persistence, immutable order and membership snapshots, duplicate prevention, invalid or unavailable storage, event payloads, consent state transitions, and bounded diagnostics. These edge cases stay at the unit level rather than being repeated for each viewport.
+
+State factories and diagnostics now live in the provider files. `npm run test:unit` uses the native Node test runner with `tests/unit/register-typescript.mjs`, which uses the existing TypeScript dependency to compile those `.tsx` modules and resolve the app's imports. The checks call the actual state functions without rendering React; no additional package is required. The production build and browser suite verify the providers' React integration.
 
 The desktop browser suite covers:
 

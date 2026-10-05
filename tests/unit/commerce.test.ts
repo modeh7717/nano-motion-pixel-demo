@@ -8,7 +8,7 @@ import {
 import {
   COMMERCE_STORAGE_KEY,
   createCommerceStore,
-} from "../../src/lib/commerce/store.ts";
+} from "../../src/components/commerce-provider.tsx";
 
 const jacket = "NM-RUN-001";
 const tee = "NM-YGA-003";

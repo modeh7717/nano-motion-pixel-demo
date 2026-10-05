@@ -3,8 +3,8 @@ import { test } from "node:test";
 import {
   createInstrumentationLog,
   DIAGNOSTIC_LIMIT,
-} from "../../src/lib/measurement/diagnostics.ts";
-import { createMeasurementStore } from "../../src/lib/measurement/store.ts";
+  createMeasurementStore,
+} from "../../src/components/measurement-provider.tsx";
 import { buildItemAdded } from "../../src/lib/measurement/event-builders.ts";
 import type { MeasurementEvent } from "../../src/lib/measurement/types.ts";
 

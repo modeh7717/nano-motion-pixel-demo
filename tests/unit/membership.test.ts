@@ -5,7 +5,7 @@ import { parseMembershipRecord } from "../../src/lib/membership/model.ts";
 import {
   createMembershipStore,
   MEMBERSHIP_STORAGE_KEY,
-} from "../../src/lib/membership/store.ts";
+} from "../../src/components/membership-provider.tsx";
 
 function fixture(initial?: string, failWrites = false) {
   const data = new Map<string, string>();

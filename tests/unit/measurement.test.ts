@@ -3,8 +3,8 @@ import { test } from "node:test";
 import { products } from "../../src/data/products.ts";
 import { membershipPlan } from "../../src/data/membership.ts";
 import { purchaseSnapshot } from "../../src/lib/commerce/model.ts";
-import { createCommerceStore } from "../../src/lib/commerce/store.ts";
-import { createMembershipStore } from "../../src/lib/membership/store.ts";
+import { createCommerceStore } from "../../src/components/commerce-provider.tsx";
+import { createMembershipStore } from "../../src/components/membership-provider.tsx";
 import {
   buildProductViewed,
   buildItemAdded,
@@ -16,7 +16,7 @@ import {
 import {
   createMeasurementStore,
   CONSENT_STORAGE_KEY,
-} from "../../src/lib/measurement/store.ts";
+} from "../../src/components/measurement-provider.tsx";
 import type {
   MeasurementEvent,
   PixelDriver,

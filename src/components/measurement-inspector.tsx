@@ -8,8 +8,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMeasurement } from "@/components/measurement-provider";
-import { DIAGNOSTIC_LIMIT } from "@/lib/measurement/diagnostics";
+import {
+  DIAGNOSTIC_LIMIT,
+  useMeasurement,
+} from "@/components/measurement-provider";
 import { formatUsd } from "@/lib/money";
 
 /**
