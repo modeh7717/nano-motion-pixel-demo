@@ -1,6 +1,6 @@
 # Nano Motion
 
-A fictional activewear storefront for the OpenAI Measurement Pixel demo. This release implements **Phases 1–5: Scaffold, Commerce, Membership, Consent and measurement, and Debugging and presentation** from [the technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md).
+A fictional activewear storefront for the OpenAI Measurement Pixel demo, deployed at [nano-motion-pixel-demo.vercel.app](https://nano-motion-pixel-demo.vercel.app/). The concise [technical design](./Nano%20Motion%20%E2%80%94%20Technical%20Design.md) describes the implemented architecture, measurement plan, and remaining production work.
 
 ## What works
 
@@ -50,7 +50,7 @@ npm run build
 npm run test:e2e
 ```
 
-`typecheck` generates Next.js route types before running TypeScript, so it works before the first build. Browser tests start and stop their own **production** server on port 3100 and require a successful build. They run 13 desktop scenarios and 2 focused mobile Chromium smoke tests; fast unit tests cover business edge cases. The cloud machine's `/usr/bin/chromium` is used automatically. Elsewhere, install a browser with `npx playwright install chromium` or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible executable. Linux may additionally need Playwright's documented browser system dependencies.
+`typecheck` generates Next.js route types before running TypeScript, so it works before the first build. Browser tests start and stop their own **production** server on port 3100 and require a successful build. They run 14 desktop scenarios and 2 focused mobile Chromium smoke tests; fast unit tests cover business edge cases. The cloud machine's `/usr/bin/chromium` is used automatically. Elsewhere, install a browser with `npx playwright install chromium` or set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to an existing compatible executable. Linux may additionally need Playwright's documented browser system dependencies.
 
 ESLint is pinned to version 9 because the React rules bundled with the current `eslint-config-next` fail on ESLint 10. The lockfile pins the complete dependency tree.
 
@@ -127,18 +127,18 @@ The complete design and these official pages were reviewed on **October 3, 2026 
 - [Conversions API](https://developers.openai.com/ads/conversions-api)
 - [Conversion Tracking](https://developers.openai.com/ads/conversion-tracking)
 
-The six proposed events are supported: `page_viewed`, `contents_viewed`, `items_added`, `checkout_started`, `order_created`, and `subscription_created`. Commerce/view payloads use `type: "contents"`; subscription payloads use `type: "plan_enrollment"` and may include `plan_id`. Amounts and quantities are integers; an amount requires a currency. Pixel `event_id` belongs in the fourth argument, separate from the data object. Browser content items may use `id`, `name`, `content_type`, `quantity`, `amount`, and `currency`; `group_id` and `variant_dict` are server-only fields.
+The six implemented events are supported: `page_viewed`, `contents_viewed`, `items_added`, `checkout_started`, `order_created`, and `subscription_created`. Commerce/view payloads use `type: "contents"`; subscription payloads use `type: "plan_enrollment"` and may include `plan_id`. Amounts and quantities are integers; an amount requires a currency. Pixel `event_id` belongs in the fourth argument, separate from the data object. Browser content items may use `id`, `name`, `content_type`, `quantity`, `amount`, and `currency`; `group_id` and `variant_dict` are server-only fields.
 
 The docs still describe item-level `amount` without distinguishing unit price from line total. The design's decision to omit that optional field remains appropriate. The documented consent API is `oaiq("consent", false)` before initialization and `oaiq("consent", true)` after acceptance. Blocked events are not replayed. The SDK source is `https://bzrcdn.openai.com/sdk/oaiq.min.js`; transport uses `https://bzr.openai.com`. The application accesses the SDK only after acceptance.
 
-**Loading decision:** the design describes queueing consented actions in section 6, but section 8 permits suppressing loading-time actions to avoid replay across revocation. This implementation follows that cautious alternative. Official docs confirm batching and blocked-event suppression but do not provide a queue-discard API. Automated integration checks use a controlled SDK response, so they prove application command ordering and payloads rather than actual SDK transport or receipt. The initial default-user-agent download returned HTTP 403 (Cloudflare error 1010); a browser-style user agent subsequently fetched the SDK with HTTP 200. Cloud Chromium separately fails direct SDK loading with `ERR_CERT_AUTHORITY_INVALID`. The downloaded official SDK was executed locally with intercepted transport responses, confirming readiness and page-view request generation; live receipt and SDK batch behavior across revocation remain unverified.
+**Loading decision:** actions during SDK loading are suppressed without retention or replay. Official docs confirm batching and blocked-event suppression but do not provide a queue-discard API. Automated integration checks use a controlled SDK response, so they prove application command ordering and payloads rather than actual SDK transport or receipt. The initial default-user-agent download returned HTTP 403 (Cloudflare error 1010); a browser-style user agent subsequently fetched the SDK with HTTP 200. Cloud Chromium separately fails direct SDK loading with `ERR_CERT_AUTHORITY_INVALID`. The downloaded official SDK was executed locally with intercepted transport responses, confirming readiness and page-view request generation; live receipt and SDK batch behavior across revocation remain unverified.
 
-**Repository/design discrepancy:** the design's opening implementation note describes a completed browser integration and references README/TESTING files that were absent from the starting repository. This scaffold does not treat that note as proof of implemented functionality. The original design is preserved unchanged.
+**Attribution limitation:** startup `consent(false)` can clear SDK `__obref`/`__oppref` cookies. Restoring accepted consent on a new document without `oppref` in the URL may lose a saved ad reference. See the technical design for the remaining production validation and startup work.
 
-## Deployment and next phases
+## Deployment and next steps
 
-To deploy this scaffold on Vercel, import this repository, choose the Next.js framework preset, use `npm ci` for installation and `npm run build` for the build, and use a Node.js version supported by the manifest. No custom output directory or secrets are required. Deployment has not been performed or validated.
+The site is deployed on [Vercel](https://nano-motion-pixel-demo.vercel.app/) from GitHub `main`. Use the Next.js framework preset, `npm ci` for installation, `npm run build` for the build, and Node.js 24. No custom output directory or secrets are required.
 
-Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project.
+Next steps are attribution-cookie startup correction, live SDK and Ads reporting validation, a controlled test campaign, and international/membership production support. See the technical design and TESTING.md for details.
 
 Future server-side measurement would send confirmed outcomes through the Conversions API and reuse the Pixel ID, event name, and stable event ID for deduplication. It requires a backend and a server-held Conversions API key; browser code must never contain that key. No server integration is required for this demo.
