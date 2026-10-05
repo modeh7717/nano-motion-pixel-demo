@@ -111,7 +111,12 @@ export function createMeasurementStore({
     }
   };
   const view = () => {
-    if (!visit || visit.measured) return;
+    // Route effects can run before the provider restores saved consent. Keep
+    // the current visit, but make no dispatch decision until restoration ends.
+    if (!state.ready || !visit || visit.measured) return;
+    // An accepted current view is measured when loading finishes. Unlike cart
+    // and conversion actions, it is not a discarded loading-time interaction.
+    if (state.preference === "accepted" && state.sdkStatus === "loading") return;
     const event = buildRouteViewed(visit.pathname);
     if (!event) return;
     if (state.preference !== "accepted" || state.sdkStatus !== "ready") {
@@ -197,8 +202,15 @@ export function createMeasurementStore({
     hydrate: () => {
       if (state.ready) return;
       const saved = readStored(storage, CONSENT_STORAGE_KEY, parseConsent);
-      publish({ ready: true });
+      publish({
+        ready: true,
+        preference: saved.value ?? "unknown",
+        storageIssue: saved.issue,
+      });
       applyPreference(saved.value ?? "unknown", saved.issue);
+      // Reconsider a route observed before hydration. Unknown/declined consent
+      // is now an actual saved state; accepted visits wait for SDK readiness.
+      view();
     },
     setPreference: (preference: ConsentPreference) => {
       if (!state.ready) return;

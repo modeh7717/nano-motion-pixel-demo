@@ -53,6 +53,31 @@ test("production inspector requires the exact flag, and toggling it never adds v
   expect(
     (await events(page)).filter((event) => event[1] === "contents_viewed"),
   ).toHaveLength(1);
+  // Adding the flag through the address bar creates a new document, which must
+  // restore saved acceptance before logging its initial product view.
+  await page.goto("/product/aero-run-jacket?measurementDebug=true");
+  await openInspector(page);
+  await expect(inspector(page)).toContainText("Consent: accepted");
+  const view = inspector(page).locator('[data-event-name="contents_viewed"]');
+  await expect(view).toHaveCount(1);
+  await expect(view).toHaveAttribute("data-dispatch-status", "handed_to_sdk");
+  await expect(inspector(page)).not.toContainText(
+    "Measurement consent is not accepted.",
+  );
+  await page.reload();
+  await openInspector(page);
+  await expect(view).toHaveCount(1);
+  await expect(view).toHaveAttribute("data-dispatch-status", "handed_to_sdk");
+  await page.getByRole("button", { name: "Revoke measurement" }).click();
+  await page.reload();
+  await openInspector(page);
+  await expect(inspector(page)).toContainText("Consent: declined");
+  await expect(view).toHaveCount(1);
+  await expect(view).toHaveAttribute("data-dispatch-status", "suppressed");
+  expect(await commands(page)).toEqual([]);
+  await expect(page.locator('script[data-nano-motion-pixel="true"]')).toHaveCount(
+    0,
+  );
 });
 
 test("inspector explains saved order payloads and clearing it cannot resend or alter the order", async ({

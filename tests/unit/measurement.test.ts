@@ -236,23 +236,33 @@ test("loading actions are discarded, readiness measures only the current visit o
   );
 });
 test("restored accepted consent waits for readiness and route observation without duplicate views", async () => {
-  const { store, measured, loaded } = fixture({
-    raw: JSON.stringify({ version: 1, preference: "accepted" }),
-  });
-  store.hydrate();
-  store.hydrate();
-  await loaded();
-  assert.equal(measured.length, 0);
-  store.observeRoute("/shop");
-  store.observeRoute("/shop");
-  assert.equal(measured.length, 1);
-  store.observeRoute("/product/aero-run-jacket");
-  store.observeRoute("/shop");
-  store.observeRoute("/product/aero-run-jacket");
-  assert.deepEqual(
-    measured.map((event) => event.name),
-    ["page_viewed", "contents_viewed", "page_viewed", "contents_viewed"],
-  );
+  for (const timing of ["before-hydration", "during-loading", "after-loading"]) {
+    const { store, measured, loaded } = fixture({
+      raw: JSON.stringify({ version: 1, preference: "accepted" }),
+    });
+    if (timing === "before-hydration") store.observeRoute("/shop");
+    store.hydrate();
+    store.hydrate();
+    if (timing === "during-loading") store.observeRoute("/shop");
+    assert.equal(store.diagnostics.getSnapshot().length, 0);
+    assert.equal(measured.length, 0);
+    await loaded();
+    if (timing === "after-loading") assert.equal(measured.length, 0);
+    store.observeRoute("/shop");
+    store.observeRoute("/shop");
+    assert.equal(measured.length, 1);
+    assert.deepEqual(
+      store.diagnostics.getSnapshot().map((entry) => entry.result.status),
+      ["handed_to_sdk"],
+    );
+    store.observeRoute("/product/aero-run-jacket");
+    store.observeRoute("/shop");
+    store.observeRoute("/product/aero-run-jacket");
+    assert.deepEqual(
+      measured.map((event) => event.name),
+      ["page_viewed", "contents_viewed", "page_viewed", "contents_viewed"],
+    );
+  }
 });
 test("revocation during loading blocks everything until reacceptance, without historical replay", async () => {
   const { store, measured, loaded, calls } = fixture();
