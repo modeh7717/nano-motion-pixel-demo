@@ -160,9 +160,11 @@ export function MeasurementInspector() {
                       </p>
                     )}
                   </div>
-                  <p className="instrumentation-reason">
-                    {entry.result.reason}
-                  </p>
+                  {entry.result.status !== "handed_to_sdk" && (
+                    <p className="instrumentation-reason">
+                      {entry.result.reason}
+                    </p>
+                  )}
                   {/* event_id is an SDK option (the fourth measure argument),
                       separate from event data. Show both without rebuilding or
                       dispatching them; disclosure is only a local inspection. */}
