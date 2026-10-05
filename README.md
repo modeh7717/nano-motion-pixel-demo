@@ -18,7 +18,7 @@ A fictional activewear storefront for the OpenAI Measurement Pixel demo. This re
 - A centralized, consent-gated OpenAI Pixel adapter and all six standard events with validated amounts and stable conversion IDs.
 - A bounded local instrumentation inspector with payload details, suppression reasons, and SDK status.
 
-Confirmation routes do not fabricate a successful outcome or resend conversions. Demo checkout and membership collect no personal or payment information and charge nothing. See [PRESENTATION.md](./PRESENTATION.md) for the walkthrough, event rationale, and evidence boundaries.
+Confirmation routes do not fabricate a successful outcome or resend conversions. Demo checkout and membership collect no personal or payment information and charge nothing.
 
 ## Develop
 
@@ -139,6 +139,6 @@ The docs still describe item-level `amount` without distinguishing unit price fr
 
 To deploy this scaffold on Vercel, import this repository, choose the Next.js framework preset, use `npm ci` for installation and `npm run build` for the build, and use a Node.js version supported by the manifest. No custom output directory or secrets are required. Deployment has not been performed or validated.
 
-Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project. Presentation instructions are in [PRESENTATION.md](./PRESENTATION.md).
+Phases 6–7 cover final QA and public deployment, including live SDK/network verification. The full design's acceptance criteria apply to the complete project.
 
 Future server-side measurement would send confirmed outcomes through the Conversions API and reuse the Pixel ID, event name, and stable event ID for deduplication. It requires a backend and a server-held Conversions API key; browser code must never contain that key. No server integration is required for this demo.

@@ -48,7 +48,7 @@ Measurement tests intercept the documented SDK URL with a controlled fixture. It
 2. Add two jackets and one tee: verify $364.00. Change jackets to three: $512.00. Remove the tee: $444.00. Refresh and verify the saved cart.
 3. Test direct checkout, history navigation, explicit attempt restart, cart edits, and a new independent order. Try blocked or full storage and verify the warning and safe empty state after refresh.
 4. Join membership, refresh confirmation, and revisit the plan. Confirm the same enrollment ID and no real billing. Check membership with an existing cart/order and restricted storage.
-5. Open `?measurementDebug=true` in production. Open the bottom-right Interaction log window. Inspect payloads, values and IDs; clear, refresh, revoke and reset the local log. Follow [PRESENTATION.md](./PRESENTATION.md) for the demo walkthrough.
+5. Open `?measurementDebug=true` in production. Open the bottom-right Interaction log window. Inspect payloads, values and IDs; clear, refresh, revoke and reset the local log.
 
 ## Live SDK validation
 
