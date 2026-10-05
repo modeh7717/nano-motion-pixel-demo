@@ -205,7 +205,7 @@ test("committed navigation and history create visits while query/hash changes an
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Shop", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/shop$/);
+  await expect(page).toHaveURL(/\/shop\?measurementDebug=true$/);
   await expect
     .poll(
       async () =>
@@ -223,7 +223,7 @@ test("committed navigation and history create visits while query/hash changes an
     )
     .toBe(2);
   await page.goForward();
-  await expect(page).toHaveURL(/\/shop$/);
+  await expect(page).toHaveURL(/\/shop\?measurementDebug=true$/);
   await expect
     .poll(
       async () =>

@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { withMeasurementDebug } from "@/lib/measurement-debug";
 import { Arrow } from "@/components/brand";
 import { StorageNotice } from "@/components/commerce-provider";
 import { useMembership } from "@/components/membership-provider";
@@ -19,7 +20,9 @@ export function MembershipActions() {
     setBusy(true);
     try {
       actions.enroll();
-      router.push("/membership-confirmation");
+      router.push(
+        withMeasurementDebug("/membership-confirmation", window.location.search),
+      );
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Please try joining again.",

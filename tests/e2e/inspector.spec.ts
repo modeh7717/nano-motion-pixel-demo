@@ -64,10 +64,12 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
   await page.getByRole("button", { name: "Add to cart" }).click();
   await page.getByRole("button", { name: "Add to cart" }).click();
   await page.getByRole("link", { name: "View cart", exact: true }).click();
+  await expect(page).toHaveURL(/\/cart\?measurementDebug=true$/);
   await page.getByRole("button", { name: "Begin demo checkout" }).click();
+  await expect(page).toHaveURL(/\/checkout\?measurementDebug=true$/);
   await page.getByRole("button", { name: "Complete demo order" }).click();
+  await expect(page).toHaveURL(/\/order-confirmation\?measurementDebug=true$/);
   await expect(page.locator(".order-id")).toBeVisible();
-  await enable(page);
   const panel = inspector(page);
   await openInspector(page);
   const order = panel.locator('[data-event-name="order_created"]');
@@ -105,4 +107,53 @@ test("inspector explains saved order payloads and clearing it cannot resend or a
   expect(
     (await events(page)).filter((event) => event[1] === "order_created"),
   ).toHaveLength(0);
+});
+
+test("manually adding the debug flag carries it through links and membership until removed", async ({
+  page,
+}) => {
+  await installSdk(page);
+  await page.goto("/");
+  await enable(page);
+  await page.getByRole("link", { name: "Explore the collection" }).click();
+  await expect(page).toHaveURL(/\/shop\?measurementDebug=true$/);
+  await expect(inspector(page)).toBeVisible();
+  const product = page.locator('a[href^="/product/aero-run-jacket"]');
+  await expect(product).toHaveAttribute(
+    "href",
+    "/product/aero-run-jacket?measurementDebug=true",
+  );
+  await product.click();
+  await expect(page).toHaveURL(
+    /\/product\/aero-run-jacket\?measurementDebug=true$/,
+  );
+  await page.goBack();
+  await expect(page).toHaveURL(/\/shop\?measurementDebug=true$/);
+  await page
+    .getByRole("link", { name: "Nano Motion Plus", exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/membership\?measurementDebug=true$/);
+  await page.getByRole("button", { name: "Join demo membership" }).click();
+  await expect(page).toHaveURL(
+    /\/membership-confirmation\?measurementDebug=true$/,
+  );
+  await page.reload();
+  await expect(inspector(page)).toBeVisible();
+  // Manually remove the parameter without refreshing, as with the DevTools helper.
+  await page.evaluate(() => {
+    const url = new URL(location.href);
+    url.searchParams.delete("measurementDebug");
+    history.replaceState(null, "", url);
+  });
+  await expect(inspector(page)).toHaveCount(0);
+  const shop = page.getByRole("link", { name: "Shop", exact: true });
+  await expect(shop).toHaveAttribute("href", "/shop");
+  await shop.click();
+  await expect(page).toHaveURL(/\/shop$/);
+  await expect(inspector(page)).toHaveCount(0);
+  await page.goto("/membership?measurementDebug=false");
+  await expect(shop).toHaveAttribute("href", "/shop");
+  await page.getByRole("link", { name: "View your membership" }).click();
+  await expect(page).toHaveURL(/\/membership-confirmation$/);
 });

@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { withMeasurementDebug } from "@/lib/measurement-debug";
 import { Arrow } from "@/components/brand";
 import {
   JourneyLoading,
@@ -39,7 +40,8 @@ export function CartView() {
     starting.current = true;
     startTransition(() => {
       try {
-        if (actions.startCheckout()) router.push("/checkout");
+        if (actions.startCheckout())
+          router.push(withMeasurementDebug("/checkout", window.location.search));
       } catch (error) {
         setError(
           error instanceof Error

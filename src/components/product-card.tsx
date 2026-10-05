@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import type { Product } from "@/data/products";
 import { formatUsd } from "@/lib/money";
 import { Arrow } from "@/components/brand";

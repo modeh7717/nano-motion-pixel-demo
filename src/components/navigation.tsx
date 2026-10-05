@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { usePathname } from "next/navigation";
 import { useCommerce } from "@/components/commerce-provider";
 

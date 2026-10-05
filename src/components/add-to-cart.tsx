@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { useState } from "react";
 import { Arrow } from "@/components/brand";
 import { StorageNotice, useCommerce } from "@/components/commerce-provider";

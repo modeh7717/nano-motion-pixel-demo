@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { Arrow, BrandMark } from "@/components/brand";
 
 type EmptyStateProps = {

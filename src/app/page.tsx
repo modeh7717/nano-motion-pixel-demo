@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { Arrow } from "@/components/brand";
 import { ProductCard } from "@/components/product-card";
 import { products } from "@/data/products";

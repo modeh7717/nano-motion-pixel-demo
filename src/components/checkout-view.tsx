@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { withMeasurementDebug } from "@/lib/measurement-debug";
 import { Arrow } from "@/components/brand";
 import {
   JourneyLoading,
@@ -99,7 +100,9 @@ function CompleteOrder({ attemptId }: { attemptId: string }) {
     setBusy(true);
     try {
       actions.completeCheckout(attemptId);
-      router.push("/order-confirmation");
+      router.push(
+        withMeasurementDebug("/order-confirmation", window.location.search),
+      );
     } catch (error) {
       setError(
         error instanceof Error

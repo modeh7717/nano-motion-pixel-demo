@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
+import Link from "@/components/storefront-link";
 import { BrandMark } from "@/components/brand";
 import { Navigation } from "@/components/navigation";
 import { CommerceProvider } from "@/components/commerce-provider";
